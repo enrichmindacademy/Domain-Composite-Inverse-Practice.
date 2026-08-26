@@ -2,729 +2,670 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>AppLab — FastBite Delivery Fee Engine</title>
+<title>Domain Practice — Self-Check</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#FFFFFF;
-    --panel:#F5F3FC;
-    --panel-2:#ECE7FA;
-    --border:#DCD4F5;
-    --purple:#7C3AED;
-    --purple-deep:#5B21B6;
-    --blue:#2563EB;
-    --green:#047857;
-    --green-bg:#E7F6EF;
-    --amber:#B45309;
-    --amber-bg:#FDF2E2;
-    --red:#B91C1C;
-    --red-bg:#FCEAEA;
-    --text:#1D1832;
-    --dim:#5B5478;
+    --bg:#FFFFFF; --panel:#F5F3FC; --panel-2:#ECE7FA; --border:#DCD4F5;
+    --purple:#7C3AED; --purple-deep:#5B21B6; --blue:#2563EB;
+    --green:#047857; --green-bg:#E7F6EF; --amber:#B45309; --amber-bg:#FDF2E2;
+    --red:#B91C1C; --red-bg:#FCEAEA; --text:#1D1832; --dim:#5B5478;
   }
   *{box-sizing:border-box;}
   body{
     margin:0;
-    background:
-      radial-gradient(circle at 14% -8%, #EFE9FB 0%, #FFFFFF 40%),
-      radial-gradient(circle at 100% 100%, #E9F0FE 0%, #FFFFFF 45%);
-    color:var(--text);
-    font-family:'Inter',sans-serif;
-    min-height:100vh;
-    padding:24px 32px 50px;
+    background: radial-gradient(circle at 14% -8%, #EFE9FB 0%, #FFFFFF 40%), radial-gradient(circle at 100% 100%, #E9F0FE 0%, #FFFFFF 45%);
+    color:var(--text); font-family:'Inter',sans-serif; min-height:100vh; padding:24px 28px 60px;
   }
-  .eyebrow{
-    font-family:'JetBrains Mono',monospace;
-    font-size:12px;
-    letter-spacing:0.12em;
-    text-transform:uppercase;
-    color:var(--blue);
-    font-weight:700;
-    margin:0 0 5px;
-  }
-  h1{
-    font-family:'Sora',sans-serif;
-    font-weight:800;
-    font-size:clamp(22px,3vw,32px);
-    margin:0 0 4px;
-    letter-spacing:-0.01em;
-    color:var(--text);
-  }
-  .sub{
-    color:var(--dim);
-    font-size:14px;
-    max-width:700px;
-    line-height:1.5;
-    margin:0 0 16px;
-  }
+  .eyebrow{ font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--blue); font-weight:700; margin:0 0 5px; }
+  h1{ font-family:'Sora',sans-serif; font-weight:800; font-size:clamp(22px,3vw,32px); margin:0 0 4px; color:var(--text); }
+  .sub{ color:var(--dim); font-size:14px; max-width:720px; line-height:1.5; margin:0 0 18px; }
 
-  .howto{
-    background:var(--panel);
-    border:1.5px solid var(--border);
-    border-radius:14px;
-    padding:12px 18px;
-    margin-bottom:18px;
-    display:flex;
-    gap:22px;
-    flex-wrap:wrap;
-    align-items:center;
+  .scorebar{
+    position:sticky; top:0; z-index:10;
+    background:#fff; border:1.5px solid var(--border); border-radius:14px;
+    padding:12px 18px; margin-bottom:20px; display:flex; align-items:center; gap:16px;
+    box-shadow:0 4px 16px rgba(90,60,180,0.08);
   }
-  .howto .item{
-    display:flex;
-    gap:8px;
-    align-items:center;
-    font-size:12.5px;
-    color:var(--text);
-    line-height:1.4;
-  }
-  .howto .num{
-    flex-shrink:0;
-    width:20px; height:20px;
-    border-radius:50%;
-    background:var(--purple);
-    color:#fff;
-    font-family:'Sora',sans-serif;
-    font-weight:700;
-    font-size:11px;
-    display:flex; align-items:center; justify-content:center;
-  }
+  .scorebar .label{ font-family:'Sora',sans-serif; font-weight:700; font-size:14px; white-space:nowrap; }
+  .scorebar .track{ flex:1; height:10px; background:var(--panel-2); border-radius:6px; overflow:hidden; }
+  .scorebar .fill{ height:100%; background:linear-gradient(90deg, var(--purple), var(--blue)); width:0%; transition:width .3s ease; }
+  .scorebar .count{ font-family:'JetBrains Mono',monospace; font-weight:700; font-size:14px; color:var(--purple-deep); white-space:nowrap; }
 
-  .tabs{
-    display:flex;
-    gap:8px;
-    margin-bottom:16px;
-    flex-wrap:wrap;
-  }
-  .tab{
-    font-family:'Sora',sans-serif;
-    font-weight:700;
-    font-size:13.5px;
-    padding:10px 16px;
-    border-radius:11px;
-    border:1.5px solid var(--border);
-    background:#fff;
-    color:var(--dim);
-    cursor:pointer;
-    transition:all .15s ease;
-  }
-  .tab .n{
-    font-family:'JetBrains Mono',monospace;
-    font-size:11px;
-    color:var(--purple);
-    margin-right:7px;
-  }
-  .tab.active{
-    background:linear-gradient(135deg, var(--purple), var(--blue));
-    color:#fff;
-    border-color:transparent;
-  }
-  .tab.active .n{color:#fff; opacity:.9;}
-  .tab:not(.active):hover{border-color:var(--purple); color:var(--text);}
+  .tabs{ display:flex; gap:8px; margin-bottom:18px; flex-wrap:wrap; }
+  .tab{ font-family:'Sora',sans-serif; font-weight:700; font-size:13.5px; padding:10px 16px; border-radius:11px; border:1.5px solid var(--border); background:#fff; color:var(--dim); cursor:pointer; }
+  .tab .n{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--purple); margin-right:7px; }
+  .tab.active{ background:linear-gradient(135deg, var(--purple), var(--blue)); color:#fff; border-color:transparent; }
+  .tab.active .n{ color:#fff; opacity:.9; }
 
-  .stage{display:none;}
-  .stage.active{display:block; animation:fade .25s ease;}
-  @keyframes fade{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);}}
-
-  .grid{
-    display:grid;
-    grid-template-columns: 1.1fr 1fr;
-    gap:18px;
-  }
-  @media (max-width:900px){ .grid{grid-template-columns:1fr;} }
+  .part{ display:none; }
+  .part.active{ display:block; animation:fade .2s ease; }
+  @keyframes fade{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);} }
+  .part-note{ background:var(--panel); border:1.5px solid var(--border); border-radius:12px; padding:10px 14px; font-size:12.5px; color:var(--dim); margin-bottom:16px; }
 
   .card{
-    background:#fff;
-    border:1.5px solid var(--border);
-    border-radius:16px;
-    padding:18px 20px;
-    box-shadow:0 2px 14px rgba(90,60,180,0.05);
+    background:#fff; border:1.5px solid var(--border); border-radius:16px;
+    padding:18px 20px; margin-bottom:16px; box-shadow:0 2px 12px rgba(90,60,180,0.05);
+    transition:border-color .2s ease;
   }
-  .card h2{
-    font-family:'Sora',sans-serif;
-    font-size:17px;
-    margin:0 0 3px;
-    color:var(--text);
+  .card.solved{ border-color:var(--green); }
+  .qnum{ font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--purple); font-weight:700; margin-bottom:4px; }
+  .qtext{ font-size:15px; margin-bottom:4px; }
+  .qtext b{ font-family:'JetBrains Mono',monospace; }
+  .qhint{ font-size:12px; color:var(--dim); margin-bottom:12px; font-style:italic; }
+
+  .fieldrow{ display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; margin-bottom:10px; }
+  .field{ flex:1; min-width:180px; }
+  .field label{ display:block; font-size:11px; font-weight:700; color:var(--dim); margin-bottom:5px; text-transform:uppercase; letter-spacing:.03em; }
+  .field input{
+    width:100%; background:#fff; border:1.5px solid var(--border); color:var(--text);
+    font-family:'JetBrains Mono',monospace; font-size:14px; padding:9px 12px; border-radius:9px;
   }
-  .card .hint{
-    color:var(--dim);
-    font-size:13px;
-    margin:0 0 12px;
-    line-height:1.45;
+  .field input:focus{ outline:2px solid var(--purple); border-color:var(--purple); }
+  .checkbtn{
+    background:linear-gradient(135deg, var(--purple), var(--blue)); color:#fff; border:none;
+    font-family:'Sora',sans-serif; font-weight:700; font-size:13.5px; padding:10px 20px;
+    border-radius:10px; cursor:pointer; white-space:nowrap;
+  }
+  .checkbtn:active{ transform:scale(0.98); }
+
+  .feedback{ display:none; margin-top:10px; border-radius:12px; padding:12px 14px; border:1.5px solid; }
+  .feedback.show{ display:block; animation:fade .2s ease; }
+  .feedback.correct{ background:var(--green-bg); border-color:var(--green); }
+  .feedback.incorrect{ background:var(--red-bg); border-color:var(--red); }
+  .feedback .verdict{ font-family:'Sora',sans-serif; font-weight:800; font-size:13.5px; margin-bottom:6px; }
+  .feedback.correct .verdict{ color:var(--green); }
+  .feedback.incorrect .verdict{ color:var(--red); }
+  .feedback .explain{ font-size:12.5px; color:#3D3860; line-height:1.55; }
+  .feedback.hint{ background:var(--amber-bg); border-color:var(--amber); }
+  .feedback.hint .verdict{ color:var(--amber); }
+  .feedback.revealed{ background:var(--panel-2); border-color:var(--purple); }
+  .feedback.revealed .verdict{ color:var(--purple-deep); }
+
+  input:disabled{ background:var(--panel-2); color:var(--dim); cursor:not-allowed; }
+  .checkbtn:disabled{ background:var(--panel-2); color:var(--dim); cursor:not-allowed; }
+  .card.solved{ border-color:var(--green); }
+  .card.revealed-card{ border-color:var(--purple); }
+
+  .fmt-note{
+    background:var(--panel); border-radius:8px; padding:6px 10px; font-size:11px; color:var(--dim); margin-bottom:10px; display:inline-block;
   }
 
-  .stepline{
-    display:flex;
-    gap:8px;
-    align-items:flex-start;
-    background:var(--panel);
-    border-radius:10px;
-    padding:8px 11px;
-    margin:8px 0;
-    font-size:12px;
-    color:var(--text);
-    line-height:1.4;
+  .namebar{
+    background:#fff; border:1.5px solid var(--border); border-radius:14px; padding:14px 18px; margin-bottom:16px;
+    display:flex; align-items:center; gap:14px; flex-wrap:wrap;
   }
-  .stepline b{color:var(--purple-deep);}
+  .namebar label{ font-family:'Sora',sans-serif; font-weight:700; font-size:13px; white-space:nowrap; }
+  .namebar input{
+    flex:1; min-width:200px; background:#fff; border:1.5px solid var(--border); color:var(--text);
+    font-family:'Inter',sans-serif; font-size:14px; padding:9px 12px; border-radius:9px;
+  }
+  .namebar input:focus{ outline:2px solid var(--purple); border-color:var(--purple); }
 
-  .machine-row{
-    display:flex;
-    align-items:center;
-    gap:7px;
-    flex-wrap:wrap;
-    margin:12px 0 14px;
+  .submitbar{
+    background:var(--panel); border:1.5px solid var(--border); border-radius:14px; padding:14px 18px; margin:20px 0;
+    display:flex; align-items:center; gap:12px; flex-wrap:wrap;
   }
-  .machine{
-    background:var(--panel);
-    border:1.5px solid var(--border);
-    border-radius:12px;
-    padding:9px 12px;
-    font-family:'Sora',sans-serif;
-    font-weight:700;
-    font-size:12px;
-    text-align:center;
-    min-width:88px;
-    color:var(--text);
+  .submitbtn{
+    background:linear-gradient(135deg, var(--green), #059669); color:#fff; border:none;
+    font-family:'Sora',sans-serif; font-weight:700; font-size:14px; padding:12px 22px;
+    border-radius:11px; cursor:pointer;
   }
-  .machine .lbl{display:block; font-size:10px; color:var(--dim); font-weight:500; margin-top:2px;}
-  .arrow{color:var(--purple); font-size:16px; font-weight:700;}
-
-  label{
-    display:block;
-    font-size:11.5px;
-    font-weight:700;
-    color:var(--dim);
-    margin:12px 0 5px;
-    text-transform:uppercase;
-    letter-spacing:.04em;
+  .copybtn{
+    background:#fff; border:1.5px solid var(--border); color:var(--text);
+    font-family:'Sora',sans-serif; font-weight:700; font-size:13.5px; padding:11px 18px;
+    border-radius:11px; cursor:pointer;
   }
-  input[type=number]{
-    width:100%;
-    background:#fff;
-    border:1.5px solid var(--border);
-    color:var(--text);
-    font-family:'JetBrains Mono',monospace;
-    font-size:15px;
-    padding:10px 13px;
-    border-radius:10px;
-  }
-  input[type=number]:focus{outline:2px solid var(--purple); border-color:var(--purple);}
-
-  .toggle-row{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    background:var(--panel);
-    border:1.5px solid var(--border);
-    border-radius:12px;
-    padding:10px 14px;
-    margin:12px 0;
-  }
-  .toggle-row .t-label{font-size:12.5px; font-weight:700; color:var(--text);}
-  .toggle-row .t-sub{font-size:11px; color:var(--dim); margin-top:2px;}
-  .switch{
-    position:relative;
-    width:44px;
-    height:25px;
-    background:#CFC5EE;
-    border-radius:20px;
-    cursor:pointer;
-    flex-shrink:0;
-    transition:background .15s;
-  }
-  .switch.on{background:linear-gradient(135deg, var(--purple), var(--blue));}
-  .switch .dot{
-    position:absolute;
-    top:3px; left:3px;
-    width:19px; height:19px;
-    background:#fff;
-    border-radius:50%;
-    box-shadow:0 1px 3px rgba(0,0,0,0.25);
-    transition:transform .15s;
-  }
-  .switch.on .dot{transform:translateX(19px);}
-
-  button.run{
-    width:100%;
-    margin-top:14px;
-    background:linear-gradient(135deg, var(--purple), var(--blue));
-    color:#fff;
-    border:none;
-    font-family:'Sora',sans-serif;
-    font-weight:700;
-    font-size:14.5px;
-    padding:12px;
-    border-radius:11px;
-    cursor:pointer;
-    transition:transform .1s ease;
-  }
-  button.run:active{transform:scale(0.98);}
-
-  .output{
-    min-height:170px;
-    display:flex;
-    flex-direction:column;
-    justify-content:center;
-  }
-  .result-box{
-    border-radius:14px;
-    padding:16px 18px;
-    border:1.5px solid;
-  }
-  .result-box.ok{background:var(--green-bg); border-color:var(--green);}
-  .result-box.bad{background:var(--red-bg); border-color:var(--red);}
-  .result-box.warn{background:var(--amber-bg); border-color:var(--amber);}
-  .result-box .status{
-    font-family:'JetBrains Mono',monospace;
-    font-size:11.5px;
-    font-weight:700;
-    letter-spacing:.06em;
-    text-transform:uppercase;
-    margin-bottom:6px;
-  }
-  .result-box.ok .status{color:var(--green);}
-  .result-box.bad .status{color:var(--red);}
-  .result-box.warn .status{color:var(--amber);}
-  .result-box .headline{
-    font-family:'Sora',sans-serif;
-    font-weight:800;
-    font-size:23px;
-    margin-bottom:6px;
-    color:var(--text);
-  }
-  .result-box .detail{
-    font-size:13px;
-    color:#3D3860;
-    line-height:1.55;
-  }
-  .result-box .detail b{color:var(--text);}
-  .placeholder{
-    color:var(--dim);
-    font-size:13.5px;
-    text-align:center;
-    padding:34px 10px;
-    border:1.5px dashed var(--border);
-    border-radius:14px;
-    background:var(--panel);
-  }
-
-  /* ---- Blank workspace for live annotation ---- */
-  .workspace{
-    margin-top:16px;
-    border:1.5px dashed #C9BEEE;
-    border-radius:14px;
-    min-height:190px;
-    position:relative;
-    background:
-      repeating-linear-gradient(
-        to bottom,
-        transparent,
-        transparent 34px,
-        #EDE8FA 34px,
-        #EDE8FA 35px
-      );
-  }
-  .workspace .ws-label{
-    position:absolute;
-    top:8px;
-    left:14px;
-    font-family:'JetBrains Mono',monospace;
-    font-size:10.5px;
-    letter-spacing:.06em;
-    text-transform:uppercase;
-    color:#A79BD6;
-  }
-
-  .footnote{
-    margin-top:12px;
-    font-size:12px;
-    color:var(--dim);
-    background:var(--panel);
-    border-radius:10px;
-    padding:10px 13px;
-    border:1.5px solid var(--border);
-  }
-  .footnote b{color:var(--text);}
+  .submit-status{ font-size:13px; color:var(--dim); }
+  .submit-status.ok{ color:var(--green); font-weight:700; }
+  .submit-status.err{ color:var(--red); font-weight:700; }
 </style>
 </head>
 <body>
 
-  <p class="eyebrow">AppLab · Live &amp; Breakable</p>
-  <h1>FastBite Delivery — Fee Engine</h1>
-  <p class="sub">A real (small) piece of software, working live. Type numbers in, press the button, and watch what the app actually does.</p>
+  <p class="eyebrow">Self-Check Practice</p>
+  <h1>Domain: Restrictions, Composites, and Inverses</h1>
+  <p class="sub">Work each problem out on paper first, then type your answer and press Check. You'll see whether you're right immediately, and the full explanation either way — use it to catch what you missed before moving on.</p>
 
-  <div class="howto">
-    <div class="item"><span class="num">1</span><span>Go through the tabs <b>in order</b>.</span></div>
-    <div class="item"><span class="num">2</span><span><b>Green</b> = works. <b>Red</b> = broken. <b>Yellow</b> = ambiguous.</span></div>
-    <div class="item"><span class="num">3</span><span>Flip each switch <b>before and after</b> running a number.</span></div>
+  <div class="namebar">
+    <label for="student-name">Your name:</label>
+    <input type="text" id="student-name" placeholder="Type your name so your teacher knows whose results these are">
+  </div>
+
+  <div class="scorebar">
+    <span class="label">Progress</span>
+    <div class="track"><div class="fill" id="scorefill"></div></div>
+    <span class="count" id="scorecount">0 / 26 solved</span>
+  </div>
+
+  <div class="submitbar">
+    <button class="submitbtn" onclick="submitResults()">Submit My Results to Teacher</button>
+    <button class="copybtn" onclick="copyResults()">Copy Results as Text</button>
+    <span class="submit-status" id="submit-status"></span>
   </div>
 
   <div class="tabs">
-    <div class="tab active" data-stage="fee"><span class="n">01</span>Fee Calculator</div>
-    <div class="tab" data-stage="composite"><span class="n">02</span>Loyalty Discount</div>
-    <div class="tab" data-stage="domaincomp"><span class="n">03</span>Domain of a Composite</div>
-    <div class="tab" data-stage="inverse"><span class="n">04</span>Support Lookup</div>
-    <div class="tab" data-stage="reversecomp"><span class="n">05</span>Reverse the Surcharge</div>
+    <div class="tab active" data-part="A"><span class="n">A</span>Domain w/ Restrictions</div>
+    <div class="tab" data-part="B"><span class="n">B</span>Domain of Composites</div>
+    <div class="tab" data-part="C"><span class="n">C</span>Domain of Inverses</div>
   </div>
 
-  <!-- STAGE 1: FEE CALCULATOR (DOMAIN / RANGE) -->
-  <div class="stage active" id="stage-fee">
-    <div class="grid">
-      <div class="card">
-        <h2>fee(d) = 2 + 1.5d</h2>
-        <p class="hint">Flat $2 base fee, plus $1.50 per mile.</p>
-
-        <div class="machine-row">
-          <div class="machine">distance (mi)<span class="lbl">input</span></div>
-          <div class="arrow">→</div>
-          <div class="machine">fee(d)<span class="lbl">machine</span></div>
-          <div class="arrow">→</div>
-          <div class="machine">charge ($)<span class="lbl">output</span></div>
-        </div>
-
-        <div class="stepline"><b>Try this first:</b> switch OFF, enter <b>−3</b> as the distance.</div>
-
-        <label>Distance (miles)</label>
-        <input type="number" id="fee-distance" placeholder="e.g. 4  or  try -3" step="any">
-
-        <div class="toggle-row">
-          <div>
-            <div class="t-label">Enforce real-world limits</div>
-            <div class="t-sub">On = rejects inputs that can't really happen.</div>
-          </div>
-          <div class="switch" id="fee-toggle" onclick="toggleSwitch('fee-toggle')"><div class="dot"></div></div>
-        </div>
-
-        <button class="run" onclick="runFee()">Calculate Fee</button>
-      </div>
-
-      <div class="card output" id="fee-output">
-        <div class="placeholder">Enter a distance and press Calculate Fee.</div>
-      </div>
-    </div>
-    <div class="workspace"></div>
+  <div class="part-note" id="format-note">
+    Type interval notation like <b>(2, infinity)</b> or <b>[-2, 0) U (0, 2]</b> — "U" or "∪" both work for union, and "infinity" or "∞" both work. Inequality form like <b>x &gt; 2</b> also works for single-piece answers. You get <b>3 tries</b> per question — a hint appears after each wrong try, and the full explanation unlocks if you're still stuck after try 3.
   </div>
 
-  <!-- STAGE 2: COMPOSITE (ORDER) -->
-  <div class="stage" id="stage-composite">
-    <div class="grid">
-      <div class="card">
-        <h2>discount(fee(d))</h2>
-        <p class="hint">Loyalty rule: 10% off any charge over $20. It expects a <em>dollar amount</em>, not a distance.</p>
-
-        <div class="machine-row">
-          <div class="machine">distance (mi)<span class="lbl">input</span></div>
-          <div class="arrow">→</div>
-          <div class="machine">fee(d)<span class="lbl">machine 1</span></div>
-          <div class="arrow">→</div>
-          <div class="machine">discount(f)<span class="lbl">machine 2</span></div>
-          <div class="arrow">→</div>
-          <div class="machine">final<span class="lbl">output</span></div>
-        </div>
-
-        <div class="stepline"><b>Try this first:</b> enter <b>15</b>, switch OFF. Then flip the switch ON and run 15 again.</div>
-
-        <label>Distance (miles)</label>
-        <input type="number" id="comp-distance" placeholder="e.g. 15" step="any">
-
-        <div class="toggle-row">
-          <div>
-            <div class="t-label">Reverse the order</div>
-            <div class="t-sub">On = discount applied straight to the distance.</div>
-          </div>
-          <div class="switch" id="comp-toggle" onclick="toggleSwitch('comp-toggle')"><div class="dot"></div></div>
-        </div>
-
-        <button class="run" onclick="runComposite()">Run Composite</button>
-      </div>
-
-      <div class="card output" id="comp-output">
-        <div class="placeholder">Enter a distance and press Run Composite.</div>
-      </div>
-    </div>
-    <div class="workspace"></div>
-  </div>
-
-  <!-- STAGE 3: DOMAIN OF A COMPOSITE (INSURANCE SURCHARGE) -->
-  <div class="stage" id="stage-domaincomp">
-    <div class="grid">
-      <div class="card">
-        <h2>insurance(fee(d)) = √(fee(d) − 5)</h2>
-        <p class="hint">New rule: a surge-insurance surcharge, computed as the square root of (fee − 5). A square root can't accept a negative number — so this machine has its own domain restriction.</p>
-
-        <div class="machine-row">
-          <div class="machine">distance (mi)<span class="lbl">input</span></div>
-          <div class="arrow">→</div>
-          <div class="machine">fee(d)<span class="lbl">machine 1</span></div>
-          <div class="arrow">→</div>
-          <div class="machine">√(f − 5)<span class="lbl">machine 2</span></div>
-          <div class="arrow">→</div>
-          <div class="machine">surcharge<span class="lbl">output</span></div>
-        </div>
-
-        <div class="stepline"><b>Try this first:</b> enter <b>1</b> mile (fee alone is totally valid here). Then try <b>2</b>, then <b>3</b>. Watch where it starts working.</div>
-
-        <label>Distance (miles)</label>
-        <input type="number" id="dc-distance" placeholder="e.g. 1, 2, or 3" step="any">
-
-        <button class="run" onclick="runDomainComp()">Run Composite</button>
-      </div>
-
-      <div class="card output" id="dc-output">
-        <div class="placeholder">Enter a distance and press Run Composite.</div>
-      </div>
-    </div>
-    <div class="workspace"></div>
-  </div>
-
-  <!-- STAGE 4: INVERSE -->
-  <div class="stage" id="stage-inverse">
-    <div class="grid">
-      <div class="card">
-        <h2>Support Lookup: fee⁻¹(charge)</h2>
-        <p class="hint">A customer reports a charge. Support has to work backward to find the distance.</p>
-
-        <div class="machine-row">
-          <div class="machine">charge ($)<span class="lbl">input</span></div>
-          <div class="arrow">→</div>
-          <div class="machine">fee⁻¹(x)<span class="lbl">reverse</span></div>
-          <div class="arrow">→</div>
-          <div class="machine">distance (mi)<span class="lbl">output</span></div>
-        </div>
-
-        <div class="stepline"><b>Try this first:</b> switch OFF, enter <b>12.50</b>. Then switch ON and try <b>50</b>.</div>
-
-        <label>Reported charge ($)</label>
-        <input type="number" id="inv-charge" placeholder="e.g. 12.50  or  try 50" step="any">
-
-        <div class="toggle-row">
-          <div>
-            <div class="t-label">Use surge-capped fee</div>
-            <div class="t-sub">On = charge can never exceed $50.</div>
-          </div>
-          <div class="switch" id="inv-toggle" onclick="toggleSwitch('inv-toggle')"><div class="dot"></div></div>
-        </div>
-
-        <button class="run" onclick="runInverse()">Look Up Distance</button>
-      </div>
-
-      <div class="card output" id="inv-output">
-        <div class="placeholder">Enter a charge amount and press Look Up Distance.</div>
-      </div>
-    </div>
-    <div class="workspace"></div>
-  </div>
-
-  <!-- STAGE 5: REVERSE THE SURCHARGE (INVERSE OF A COMPOSITE) -->
-  <div class="stage" id="stage-reversecomp">
-    <div class="grid">
-      <div class="card">
-        <h2>Reverse: surcharge → distance</h2>
-        <p class="hint">A customer reports their <em>insurance surcharge</em> — not the fee, the surcharge. To get back to distance, you have to undo the machines in the <b>opposite order</b> from how they ran: undo the square root first, then undo the fee formula.</p>
-
-        <div class="machine-row">
-          <div class="machine">surcharge<span class="lbl">input</span></div>
-          <div class="arrow">→</div>
-          <div class="machine">square it<span class="lbl">undo √ first</span></div>
-          <div class="arrow">→</div>
-          <div class="machine">undo fee(d)<span class="lbl">undo last</span></div>
-          <div class="arrow">→</div>
-          <div class="machine">distance<span class="lbl">output</span></div>
-        </div>
-
-        <div class="stepline"><b>Try this first:</b> switch OFF, enter <b>1</b> as the surcharge. Then flip the switch ON and run 1 again to see the wrong-order mistake.</div>
-
-        <label>Reported surcharge ($)</label>
-        <input type="number" id="rc-surcharge" placeholder="e.g. 1" step="any">
-
-        <div class="toggle-row">
-          <div>
-            <div class="t-label">Undo in the original order (wrong)</div>
-            <div class="t-sub">On = undoes fee first, square root second — the mistake students make.</div>
-          </div>
-          <div class="switch" id="rc-toggle" onclick="toggleSwitch('rc-toggle')"><div class="dot"></div></div>
-        </div>
-
-        <button class="run" onclick="runReverseComp()">Reverse to Distance</button>
-      </div>
-
-      <div class="card output" id="rc-output">
-        <div class="placeholder">Enter a surcharge amount and press Reverse to Distance.</div>
-      </div>
-    </div>
-    <div class="workspace"></div>
-  </div>
+  <div id="container"></div>
 
 <script>
-function toggleSwitch(id){
-  document.getElementById(id).classList.toggle('on');
+// ---------------- Answer normalization ----------------
+function normalize(s){
+  if(!s) return '';
+  s = s.toLowerCase();
+  s = s.replace(/infinity/g, '∞').replace(/\binf\b/g, '∞');
+  s = s.replace(/\bor\b/g, '|');
+  s = s.replace(/∪/g, '|');
+  s = s.replace(/\bu\b/g, '|');
+  s = s.replace(/!=/g, '≠').replace(/>=/g, '≥').replace(/<=/g, '≤');
+  s = s.replace(/\s+/g, '');
+  s = s.replace(/[xy]/g, '');
+  let parts = s.split('|').map(p => p.trim()).filter(Boolean).sort();
+  return parts.join('|');
 }
-function isOn(id){ return document.getElementById(id).classList.contains('on'); }
-
-function renderBox(containerId, cls, status, headline, detail){
-  document.getElementById(containerId).innerHTML =
-    `<div class="result-box ${cls}">
-       <div class="status">${status}</div>
-       <div class="headline">${headline}</div>
-       <div class="detail">${detail}</div>
-     </div>`;
+function matches(userInput, acceptedList){
+  const n = normalize(userInput);
+  if(!n) return false;
+  return acceptedList.some(a => normalize(a) === n);
 }
 
-document.querySelectorAll('.tab').forEach(tab=>{
-  tab.addEventListener('click', ()=>{
-    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-    document.querySelectorAll('.stage').forEach(s=>s.classList.remove('active'));
+// ---------------- Problem data ----------------
+const problems = [
+  // ---- PART A ----
+  { id:'A1', part:'A', type:'single', label:'Domain', text:'f(x) = √(x − 2) / (x − 2)',
+    accepted:['(2, ∞)','(2, infinity)','x > 2'],
+    hint1:'Check the radicand and the denominator separately — what does each one require on its own?',
+    hint2:'The radicand needs x − 2 ≥ 0. But look closely at x = 2 itself: does it actually work in the whole function, or does something else block it?',
+    distractors:[
+      { answers:['[2, ∞)','[2, infinity)','x ≥ 2'], message:'You found the radicand\'s boundary correctly, but did you check whether x = 2 also breaks the denominator?' },
+      { answers:['(-∞, 2)','x < 2'], message:'This is the mirror image of the region across x = 2 — double check which direction √(x − 2) actually allows.' },
+    ],
+    explain:'The radicand needs x − 2 ≥ 0 → x ≥ 2, but the denominator needs x − 2 ≠ 0 → x ≠ 2. Combined, x = 2 is excluded even though it satisfies the radicand condition, giving x > 2.' },
+  { id:'A2', part:'A', type:'single', label:'Domain', text:'f(x) = 1 / √(x² − 5x + 6)',
+    accepted:['(-∞, 2) ∪ (3, ∞)','x < 2 or x > 3'],
+    hint1:'This square root sits in a denominator. How is the inequality you need different from an ordinary square-root restriction?',
+    hint2:'Factor x² − 5x + 6 first. You need the factored expression to be strictly greater than 0, not just ≥ 0 — try a sign chart.',
+    distractors:[
+      { answers:['[2, 3]','x ≥ 2 and x ≤ 3'], message:'That\'s the interval where (x−2)(x−3) is ≤ 0 — but you need where the expression under the root is strictly positive, which is the opposite regions.' },
+      { answers:['(-∞, 2] ∪ [3, ∞)'], message:'Close, but a square root in a denominator can never equal zero — check whether your endpoints should really be included.' },
+    ],
+    explain:'A square root in a denominator must be strictly positive: (x−2)(x−3) > 0. This factors and is positive when x < 2 or x > 3.' },
+  { id:'A3', part:'A', type:'single', label:'Domain', text:'f(x) = √(4 − x²) / x',
+    accepted:['[-2, 0) ∪ (0, 2]'],
+    hint1:'There are two separate restrictions here — one from the square root, one from the denominator. Find each on its own first.',
+    hint2:'The radicand gives you a closed interval symmetric around 0. Now remove the single point that breaks the denominator.',
+    distractors:[
+      { answers:['[-2, 2]'], message:'You correctly found where 4 − x² ≥ 0, but don\'t forget to also check the denominator.' },
+      { answers:['x ≠ 0'], message:'You caught the denominator restriction, but what does the square root itself require?' },
+    ],
+    explain:'The radicand needs 4 − x² ≥ 0 → −2 ≤ x ≤ 2. The denominator needs x ≠ 0.' },
+  { id:'A4', part:'A', type:'single', label:'Domain', text:'f(x) = √(x + 3) / √(9 − x²)',
+    accepted:['(-3, 3)'],
+    hint1:'Both the numerator and denominator have square roots, but only one of them needs a strict inequality. Which one, and why?',
+    hint2:'Top: x + 3 ≥ 0. Bottom is in a denominator, so 9 − x² must be strictly greater than 0. Combine both — watch the endpoint where they might disagree.',
+    distractors:[
+      { answers:['[-3, 3)','[-3,3)'], message:'Check x = −3 specifically: does it satisfy BOTH the top and bottom conditions, or does one of them reject it?' },
+      { answers:['[-3, ∞)'], message:'You found the top radicand\'s condition, but the bottom radicand sits in a denominator — what extra requirement does that add?' },
+    ],
+    explain:'Top radicand: x ≥ −3. Bottom radicand is in a denominator, so it needs 9 − x² > 0 (strict) → −3 < x < 3. Intersecting gives (−3, 3) — x = −3 is excluded even though the top condition allows it.' },
+  { id:'A5', part:'A', type:'single', label:'Domain', text:'f(x) = (x − 1) / √(x² − 1)',
+    accepted:['(-∞, -1) ∪ (1, ∞)','x < -1 or x > 1'],
+    hint1:'The square root is in the denominator. Don\'t let the (x − 1) on top distract you — where does the domain actually come from?',
+    hint2:'You need x² − 1 to be strictly positive. Factor as a difference of squares and think about where that product is positive.',
+    distractors:[
+      { answers:['(-∞, -1] ∪ [1, ∞)'], message:'This square root is in a denominator, so equality can\'t be allowed at the endpoints — check whether x = ±1 should really be included.' },
+      { answers:['(-1, 1)'], message:'That\'s where x² − 1 is negative — you need where it\'s positive instead. Try testing a point outside this interval.' },
+    ],
+    explain:'A square root in a denominator needs x² − 1 > 0 (strict) → x < −1 or x > 1. The (x−1) in the numerator does not change the domain.' },
+  { id:'A6', part:'A', type:'single', label:'Domain', text:'f(x) = √x / (x − 4) + √(8 − x)',
+    accepted:['[0, 4) ∪ (4, 8]'],
+    hint1:'Three separate pieces need checking here: one square root, one denominator, one more square root. List all three conditions before combining.',
+    hint2:'x ≥ 0 from the first root, x ≠ 4 from the denominator, x ≤ 8 from the second root. Put all three together.',
+    distractors:[
+      { answers:['[0, 8]'], message:'You\'ve combined both radicands correctly, but don\'t forget to also exclude wherever the denominator is zero.' },
+      { answers:['[0, 4) ∪ (4, ∞)'], message:'You\'ve handled the first two conditions, but what does the second square root, √(8 − x), require?' },
+    ],
+    explain:'Three conditions: x ≥ 0 (first radicand), x ≠ 4 (denominator), and x ≤ 8 (second radicand).' },
+  { id:'A7', part:'A', type:'single', label:'Domain', text:'f(x) = 1 / (√(x − 3) − 2)',
+    accepted:['[3, 7) ∪ (7, ∞)'],
+    hint1:'Start with the obvious restriction from the square root. Then ask: is there a value of x that makes the whole denominator zero, even if it\'s not obvious at a glance?',
+    hint2:'Set √(x − 3) − 2 = 0 and solve for x. That value has to be excluded too, even though it doesn\'t look dangerous at first.',
+    distractors:[
+      { answers:['[3, ∞)'], message:'This is the domain based on the square root alone — but does the denominator ever equal zero somewhere in this interval? Try solving √(x−3) = 2.' },
+    ],
+    explain:'Need x ≥ 3. The denominator is zero when √(x − 3) = 2, i.e. x = 7 — a hidden restriction only visible once you solve for it.' },
+  { id:'A8', part:'A', type:'single', label:'Domain', text:'f(x) = √((x − 1) / (x + 2))',
+    accepted:['(-∞, -2) ∪ [1, ∞)','x < -2 or x ≥ 1'],
+    hint1:'The entire fraction sits under one square root, so you need the whole fraction ≥ 0 — not each piece separately. A sign chart works well here.',
+    hint2:'Find where the numerator is zero and where the denominator is zero — those are your two critical points. Test a value in each region they create.',
+    distractors:[
+      { answers:['[-2, 1]'], message:'That\'s roughly the opposite sign region — recheck your sign chart. Where is (x−1)/(x+2) actually positive?' },
+      { answers:['(-∞, -2) ∪ (1, ∞)'], message:'Very close! But check x = 1 itself — does it make the fraction undefined, or just equal to zero? A square root can accept 0 just fine.' },
+    ],
+    explain:'Need (x−1)/(x+2) ≥ 0. Critical points x = 1 (numerator zero, allowed) and x = −2 (denominator zero, excluded). A sign chart gives (−∞,−2) ∪ [1,∞).' },
+  { id:'A9', part:'A', type:'single', label:'Domain', text:'f(x) = √(x² − 9) / (x² − 16)',
+    accepted:['(-∞, -4) ∪ (-4, -3] ∪ [3, 4) ∪ (4, ∞)'],
+    hint1:'Handle the radicand and the denominator as two separate conditions, then combine them at the end.',
+    hint2:'The radicand gives you two separate rays. The denominator excludes two isolated points — check whether either point falls inside those rays.',
+    distractors:[
+      { answers:['(-∞, -3] ∪ [3, ∞)'], message:'You\'ve got the radicand right, but don\'t forget the denominator is also undefined at two specific points inside that region.' },
+    ],
+    explain:'Radicand: x ≤ −3 or x ≥ 3. Denominator: x ≠ ±4. Removing x = −4 and x = 4 from the radicand domain gives the four-piece answer.' },
+  { id:'A10', part:'A', type:'single', label:'Domain', text:'f(x) = √(2x − 1) / (x² − x − 6)',
+    accepted:['[1/2, 3) ∪ (3, ∞)','[0.5, 3) ∪ (3, ∞)'],
+    hint1:'Factor the denominator to find where it\'s zero, and handle the radicand separately.',
+    hint2:'One of the two denominator restrictions might already be excluded by the radicand condition — check both x-values against your radicand answer before finalizing.',
+    distractors:[
+      { answers:['[1/2, ∞)','[0.5, ∞)'], message:'You\'ve got the radicand condition, but check the denominator too — factor it and see where it\'s zero.' },
+    ],
+    explain:'Radicand: x ≥ 1/2. Denominator: (x−3)(x+2) ≠ 0 → x ≠ 3, x ≠ −2. Since x ≥ 1/2 already excludes −2, only x ≠ 3 matters.' },
+
+  // ---- PART B ----
+  { id:'B1', part:'B', type:'single', label:'Domain of (f∘g)(x)', text:'f(x) = 1/x,  g(x) = √(x − 4)',
+    accepted:['(4, ∞)'],
+    hint1:'Two things to check: is x even allowed into g, and can g\'s output ever cause a problem inside f?',
+    hint2:'g needs x ≥ 4. Now ask: is there a value of x ≥ 4 that makes g(x) exactly equal to the one number f can\'t accept?',
+    distractors:[
+      { answers:['[4, ∞)'], message:'You found where g is defined, but did you check whether g(x) could equal the one value f can\'t accept (0)?' },
+      { answers:['x ≠ 4'], message:'That handles the "can\'t equal zero" part, but did you also check that x has to be in g\'s own domain first (x ≥ 4)?' },
+    ],
+    explain:'x must satisfy g\'s domain: x ≥ 4. Also g(x) can\'t be 0: √(x−4) ≠ 0 → x ≠ 4. Combined: x > 4.' },
+  { id:'B2', part:'B', type:'single', label:'Domain of (f∘g)(x)', text:'f(x) = √x,  g(x) = 1/(x − 3)',
+    accepted:['(3, ∞)'],
+    hint1:'First check g\'s own domain. Then figure out what sign g(x) needs to be for f to accept it.',
+    hint2:'g is undefined at x = 3. Separately, f needs a nonnegative input — for a fraction like 1/(x−3), when is that actually true?',
+    distractors:[
+      { answers:['x ≠ 3'], message:'You found where g is defined, but f needs a nonnegative input — what does that require of 1/(x−3)?' },
+    ],
+    explain:'x ≠ 3 for g. Need g(x) ≥ 0: 1/(x−3) ≥ 0 only when x > 3, which already covers x ≠ 3.' },
+  { id:'B3', part:'B', type:'single', label:'Domain of (f∘g)(x)', text:'f(x) = 1/√x,  g(x) = x − 5',
+    accepted:['(5, ∞)'],
+    hint1:'f needs a strictly positive input, not just a nonnegative one. Why does that distinction matter here?',
+    hint2:'Set g(x) > 0 (strictly) and solve for x.',
+    distractors:[
+      { answers:['[5, ∞)'], message:'Close — but f has a square root in a denominator, which needs a strictly positive input, not just nonnegative. Should x = 5 be included?' },
+    ],
+    explain:'f needs a strictly positive input: x − 5 > 0 → x > 5.' },
+  { id:'B4', part:'B', type:'single', label:'Domain of (f∘g)(x)', text:'f(x) = 1/√x,  g(x) = 9 − x²',
+    accepted:['(-3, 3)'],
+    hint1:'Same idea as a strict-inequality problem — f needs a strictly positive input. What does that require of g(x) = 9 − x²?',
+    hint2:'Solve 9 − x² > 0 (strict, not ≥).',
+    distractors:[
+      { answers:['[-3, 3]'], message:'Same idea — f\'s denominator can\'t be zero, so check whether the endpoints should really be included.' },
+    ],
+    explain:'f needs g(x) > 0 strictly: 9 − x² > 0 → −3 < x < 3.' },
+  { id:'B5', part:'B', type:'single', label:'Domain of (f∘g)(x)', text:'f(x) = √x,  g(x) = 1/(x + 2)',
+    accepted:['(-2, ∞)'],
+    hint1:'Check g\'s own domain first, then figure out what sign g(x) must have.',
+    hint2:'g is undefined at x = −2. For f to accept g(x), you need 1/(x+2) ≥ 0 — when is a fraction with a positive numerator actually nonnegative?',
+    distractors:[
+      { answers:['x ≠ -2'], message:'You found where g is defined, but f needs a nonnegative input — what sign does 1/(x+2) need to have?' },
+    ],
+    explain:'x ≠ −2 for g. Need g(x) ≥ 0: 1/(x+2) ≥ 0 only when x > −2, already covering x ≠ −2.' },
+  { id:'B6', part:'B', type:'single', label:'Domain of (f∘g)(x)', text:'f(x) = 1/(x − 1),  g(x) = √(x + 3)',
+    accepted:['[-3, -2) ∪ (-2, ∞)'],
+    hint1:'Two checks: g\'s own domain, and a value g(x) is not allowed to equal.',
+    hint2:'g needs x ≥ −3. Also, f blows up when its input equals 1 — so g(x) can never equal 1. Solve √(x+3) = 1 to find the x-value to exclude.',
+    distractors:[
+      { answers:['[-3, ∞)'], message:'You found g\'s domain correctly, but don\'t forget: f is undefined when its input equals 1 — solve √(x+3) = 1.' },
+    ],
+    explain:'x ≥ −3 for g. Also g(x) ≠ 1: √(x+3) ≠ 1 → x ≠ −2.' },
+  { id:'B7', part:'B', type:'single', label:'Domain of (f∘g)(x)', text:'f(x) = √(4 − x²),  g(x) = x − 1',
+    accepted:['[-1, 3]'],
+    hint1:'g itself has no restrictions. The real question is: what values can g(x) take that still fit inside f\'s domain?',
+    hint2:'f needs its input between −2 and 2, inclusive. Set up −2 ≤ g(x) ≤ 2 and solve for x.',
+    distractors:[
+      { answers:['[-2, 2]'], message:'That\'s f\'s domain in terms of its OWN input — but you need to solve for x using g(x) = x − 1 substituted in. Try −2 ≤ x−1 ≤ 2.' },
+    ],
+    explain:'g(x) must fit into f\'s domain: 4 − (x−1)² ≥ 0 → −2 ≤ x−1 ≤ 2 → −1 ≤ x ≤ 3.' },
+  { id:'B8', part:'B', type:'single', label:'Domain of (f∘g)(x)', text:'f(x) = 1/√x,  g(x) = (x − 2)²',
+    accepted:['(-∞, 2) ∪ (2, ∞)','x ≠ 2'],
+    hint1:'f needs a strictly positive input. Think about what values (x−2)² can take — is it ever exactly zero, and where?',
+    hint2:'(x−2)² is zero at exactly one x-value. Every other real number makes it positive.',
+    distractors:[
+      { answers:['all real numbers','(-∞, ∞)'], message:'g(x) is never negative, but f needs a STRICTLY positive input — is there an x-value where g(x) equals exactly zero?' },
+    ],
+    explain:'Need g(x) > 0 strictly: (x−2)² > 0 everywhere except x = 2.' },
+  { id:'B9', part:'B', type:'single', label:'Domain of (f∘g)(x)', text:'f(x) = √(x − 4),  g(x) = √(10 − x)',
+    accepted:['(-∞, -6]','x ≤ -6'],
+    hint1:'This one has two layers: g\'s own domain, and a separate condition on how large g(x) needs to be to fit into f. Find both before combining.',
+    hint2:'g needs x ≤ 10. Separately, f needs its input ≥ 4, so you need √(10−x) ≥ 4 — square both sides carefully to solve for x.',
+    distractors:[
+      { answers:['(-∞, 10]','x ≤ 10'], message:'You found where g itself is defined, but g(x) also has to be large enough to fit into f — f needs an input ≥ 4. Solve √(10 − x) ≥ 4.' },
+    ],
+    explain:'g needs x ≤ 10. g(x) must also be ≥ 4 for f: √(10−x) ≥ 4 → 10−x ≥ 16 → x ≤ −6, which is the binding condition.' },
+
+  // ---- PART C ----
+  { id:'C1', part:'C', type:'single', label:'Domain of f⁻¹', text:'f(x) = 2 / (x − 3), domain x ≠ 3',
+    accepted:['x ≠ 0'],
+    hint1:'The domain of f⁻¹ equals the range of f — so the real question is: what values can f actually output?',
+    hint2:'Can 2/(x − 3) ever equal exactly zero, no matter what x you plug in?',
+    distractors:[
+      { answers:['x ≠ 3'], message:'That\'s f\'s original DOMAIN, not its range. Domain of f⁻¹ = range of f — what values can 2/(x−3) actually never equal?' },
+    ],
+    explain:'f\'s range excludes 0 (a nonzero constant over (x−3) can\'t equal 0). The domain of f⁻¹ equals that range.' },
+  { id:'C2', part:'C', type:'dual', domainLabel:'Domain of f⁻¹', rangeLabel:'Range of f⁻¹', text:'f(x) = √(2x + 3), domain x ≥ −3/2',
+    domainAccepted:['[0, ∞)'], rangeAccepted:['[-3/2, ∞)','[-1.5, ∞)'],
+    hint1:'Find the range of f on its given domain first — that becomes the domain of f⁻¹.',
+    hint2:'As x increases from −3/2, what\'s the smallest value f can output, and does it ever stop increasing?',
+    domainDistractors:[
+      { answers:['[-3/2, ∞)','[-1.5, ∞)'], message:'That\'s f\'s original DOMAIN — the domain of f⁻¹ should be f\'s RANGE instead.' },
+    ],
+    rangeDistractors:[
+      { answers:['[0, ∞)'], message:'That\'s f\'s RANGE — the range of f⁻¹ should be f\'s original domain instead.' },
+    ],
+    explain:'On x ≥ −3/2, f has range [0, ∞). Swap: domain of f⁻¹ is [0, ∞), range of f⁻¹ is [−3/2, ∞).' },
+  { id:'C3', part:'C', type:'dual', domainLabel:'Domain of f⁻¹', rangeLabel:'Range of f⁻¹', text:'f(x) = x², restricted to x ≤ 0',
+    domainAccepted:['[0, ∞)'], rangeAccepted:['(-∞, 0]'],
+    hint1:'Squaring a negative number still gives a nonnegative result — so what\'s the range here, even though the domain is restricted to x ≤ 0?',
+    hint2:'The range of f is the same as the unrestricted case. But the range of f⁻¹ has to match the original restricted domain — think about which half of the parabola you\'re on.',
+    rangeDistractors:[
+      { answers:['[0, ∞)'], message:'That\'s the range of f, not f⁻¹. Since f was restricted to x ≤ 0, the range of f⁻¹ must match that restricted DOMAIN instead.' },
+    ],
+    explain:'On x ≤ 0, f still has range [0, ∞), but the inverse must return the negative branch: f⁻¹(x) = −√x. Domain of f⁻¹ is [0, ∞); range of f⁻¹ is (−∞, 0].' },
+  { id:'C4', part:'C', type:'dual', domainLabel:'Domain of f⁻¹', rangeLabel:'Range of f⁻¹', text:'f(x) = 3 / (x + 1), domain x ≠ −1',
+    domainAccepted:['x ≠ 0'], rangeAccepted:['y ≠ -1','≠ -1'],
+    hint1:'Same idea as the earlier rational-function inverse problem — find what value f can never output.',
+    hint2:'For the range of f⁻¹, think about it the other way: f⁻¹\'s range has to match f\'s original domain.',
+    domainDistractors:[
+      { answers:['x ≠ -1'], message:'That\'s f\'s original DOMAIN — the domain of f⁻¹ should be f\'s RANGE (what f can never output) instead.' },
+    ],
+    rangeDistractors:[
+      { answers:['y ≠ 0','≠ 0'], message:'You\'ve swapped domain and range here — that value belongs to the domain of f⁻¹, not its range.' },
+    ],
+    explain:'f⁻¹(x) = 3/x − 1. Its domain excludes 0 (matching f\'s range); its range excludes −1 (matching f\'s original domain).' },
+  { id:'C5', part:'C', type:'dual', domainLabel:'Domain of f⁻¹', rangeLabel:'Range of f⁻¹', text:'f(x) = √(9 − x²), restricted to [0, 3]',
+    domainAccepted:['[0, 3]'], rangeAccepted:['[0, 3]'],
+    hint1:'This is a quarter-circle. Evaluate f at both endpoints of the domain to see how it behaves.',
+    hint2:'f(0) and f(3) give you the two ends of the range. Is f increasing or decreasing across [0,3]?',
+    explain:'On [0,3], f decreases from 3 to 0, so its range is [0,3]. Domain and range of f⁻¹ are both [0,3] — the swap is real even though it looks unchanged here.' },
+  { id:'C6', part:'C', type:'dual', domainLabel:'Domain of f⁻¹', rangeLabel:'Range of f⁻¹', text:'f(x) = (x − 2)², restricted to x ≥ 2',
+    domainAccepted:['[0, ∞)'], rangeAccepted:['[2, ∞)'],
+    hint1:'On this restricted domain, is f increasing, decreasing, or neither? What\'s the smallest value it can output?',
+    hint2:'At x = 2, f(x) = 0. As x increases past 2, what happens to (x−2)²?',
+    domainDistractors:[
+      { answers:['[2, ∞)'], message:'That\'s f\'s original DOMAIN — the domain of f⁻¹ should be f\'s RANGE instead.' },
+    ],
+    rangeDistractors:[
+      { answers:['[0, ∞)'], message:'That\'s f\'s RANGE — the range of f⁻¹ should be f\'s original domain instead.' },
+    ],
+    explain:'On x ≥ 2, f has range [0, ∞). Swap: domain of f⁻¹ is [0, ∞), range of f⁻¹ is [2, ∞). (f⁻¹(x) = √x + 2.)' },
+  { id:'C7', part:'C', type:'single', label:'Domain of f⁻¹', text:'f(x) = 1 / √(x − 1), domain x > 1',
+    accepted:['x > 0'],
+    hint1:'Think about the extreme behavior: what happens to f as x gets very close to 1, and what happens as x gets very large?',
+    hint2:'f can get arbitrarily large near x = 1, and gets arbitrarily close to 0 as x → ∞ — but does it ever actually reach 0?',
+    distractors:[
+      { answers:['x > 1'], message:'That\'s f\'s original DOMAIN — the domain of f⁻¹ should be f\'s RANGE. What values can 1/√(x−1) actually output?' },
+    ],
+    explain:'As x → 1⁺, f grows without bound; as x → ∞, f approaches 0 but never reaches it. f\'s range is y > 0, which becomes the domain of f⁻¹.' },
+];
+
+// ---------------- Submission config ----------------
+// Paste your Google Apps Script Web App URL below (ends in /exec).
+// Until this is set, students can still use "Copy Results as Text" as a fallback.
+const SUBMIT_URL = 'https://script.google.com/macros/s/AKfycbxtZIjwuVHIPWFN_yLt35QEskfAhHzQoXzmyrZjkNsWniJXt1GFYgisNW_Hxpfs03zJoQ/exec';
+const SUBMIT_CONFIGURED = SUBMIT_URL.indexOf('http') === 0;
+
+const solved = new Set();
+const results = {}; // problem id -> true (correct) / false (failed after 3 tries)
+const attempts = {}; // problem id -> number of wrong tries so far
+const attemptsUsed = {}; // problem id -> total tries when finalized (correct or revealed)
+const MAX_ATTEMPTS = 3;
+
+function updateScore(){
+  document.getElementById('scorecount').textContent = solved.size + ' / ' + problems.length + ' solved';
+  document.getElementById('scorefill').style.width = (solved.size / problems.length * 100) + '%';
+}
+
+function partScore(part){
+  const partProblems = problems.filter(p => p.part === part);
+  const correctCount = partProblems.filter(p => results[p.id] === true).length;
+  return correctCount + '/' + partProblems.length;
+}
+
+function buildResultsPayload(){
+  const name = document.getElementById('student-name').value.trim();
+  return {
+    name: name || '(no name entered)',
+    totalScore: solved.size,
+    totalProblems: problems.length,
+    partScores: { A: partScore('A'), B: partScore('B'), C: partScore('C') },
+    problemOrder: problems.map(p => p.id),
+    results: results,
+  };
+}
+
+function buildResultsText(payload){
+  let lines = [];
+  lines.push('Domain Practice Results');
+  lines.push('Name: ' + payload.name);
+  lines.push('Score: ' + payload.totalScore + ' / ' + payload.totalProblems);
+  lines.push('Part A (Domain w/ Restrictions): ' + payload.partScores.A);
+  lines.push('Part B (Domain of Composites): ' + payload.partScores.B);
+  lines.push('Part C (Domain of Inverses): ' + payload.partScores.C);
+  lines.push('');
+  lines.push('Per-question results:');
+  payload.problemOrder.forEach(id => {
+    const r = payload.results[id];
+    const tries = attemptsUsed[id];
+    const mark = r === true ? 'correct' : (r === false ? 'incorrect (out of attempts)' : 'not attempted');
+    const triesNote = tries ? ' — ' + tries + ' attempt' + (tries === 1 ? '' : 's') : '';
+    lines.push('  ' + id + ': ' + mark + triesNote);
+  });
+  return lines.join('\n');
+}
+
+function submitResults(){
+  const statusEl = document.getElementById('submit-status');
+  const name = document.getElementById('student-name').value.trim();
+  if(!name){
+    statusEl.className = 'submit-status err';
+    statusEl.textContent = 'Please type your name first.';
+    return;
+  }
+  const payload = buildResultsPayload();
+
+  if(!SUBMIT_CONFIGURED){
+    statusEl.className = 'submit-status err';
+    statusEl.textContent = 'Automatic submission isn\'t set up yet — use "Copy Results as Text" and send it to your teacher instead.';
+    return;
+  }
+
+  statusEl.className = 'submit-status';
+  statusEl.textContent = 'Submitting…';
+
+  fetch(SUBMIT_URL, { method: 'POST', body: JSON.stringify(payload) })
+    .then(res => res.json())
+    .then(data => {
+      if(data.status === 'success'){
+        statusEl.className = 'submit-status ok';
+        statusEl.textContent = '✓ Results submitted! Your teacher can see your score.';
+      } else {
+        throw new Error(data.message || 'Unknown error');
+      }
+    })
+    .catch(err => {
+      statusEl.className = 'submit-status err';
+      statusEl.textContent = 'Couldn\'t submit automatically. Use "Copy Results as Text" and send it to your teacher instead.';
+    });
+}
+
+function copyResults(){
+  const statusEl = document.getElementById('submit-status');
+  const name = document.getElementById('student-name').value.trim();
+  if(!name){
+    statusEl.className = 'submit-status err';
+    statusEl.textContent = 'Please type your name first.';
+    return;
+  }
+  const text = buildResultsText(buildResultsPayload());
+  navigator.clipboard.writeText(text).then(() => {
+    statusEl.className = 'submit-status ok';
+    statusEl.textContent = '✓ Copied! Paste it into an email or the class assignment for your teacher.';
+  }).catch(() => {
+    statusEl.className = 'submit-status err';
+    statusEl.textContent = 'Couldn\'t copy automatically — select and copy the results manually.';
+  });
+}
+
+function renderProblem(p, index){
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.id = 'card-' + p.id;
+
+  let fieldsHtml = '';
+  if(p.type === 'single'){
+    fieldsHtml = `
+      <div class="fieldrow">
+        <div class="field">
+          <label>${p.label}</label>
+          <input type="text" id="input-${p.id}" placeholder="e.g. (2, ∞)">
+        </div>
+        <button class="checkbtn" onclick="checkProblem('${p.id}')">Check</button>
+      </div>`;
+  } else {
+    fieldsHtml = `
+      <div class="fieldrow">
+        <div class="field">
+          <label>${p.domainLabel}</label>
+          <input type="text" id="input-${p.id}-domain" placeholder="e.g. [0, ∞)">
+        </div>
+        <div class="field">
+          <label>${p.rangeLabel}</label>
+          <input type="text" id="input-${p.id}-range" placeholder="e.g. [3, ∞)">
+        </div>
+        <button class="checkbtn" onclick="checkProblem('${p.id}')">Check</button>
+      </div>`;
+  }
+
+  card.innerHTML = `
+    <div class="qnum">Question ${index + 1} of ${problems.length}</div>
+    <div class="qtext"><b>${p.text}</b></div>
+    ${fieldsHtml}
+    <div class="feedback" id="feedback-${p.id}"></div>
+  `;
+  return card;
+}
+
+function lockProblem(id, wasCorrect){
+  const card = document.getElementById('card-' + id);
+  card.classList.add('locked');
+  card.classList.add(wasCorrect ? 'solved' : 'revealed-card');
+  card.querySelectorAll('input').forEach(inp => inp.disabled = true);
+  const btn = card.querySelector('.checkbtn');
+  if(btn){
+    btn.disabled = true;
+    btn.textContent = wasCorrect ? 'Solved ✓' : 'Answer Revealed';
+  }
+}
+
+function findDistractorMessage(userInput, distractorList){
+  if(!distractorList) return null;
+  const n = normalize(userInput);
+  if(!n) return null;
+  for(const d of distractorList){
+    if(d.answers.some(a => normalize(a) === n)) return d.message;
+  }
+  return null;
+}
+
+function checkProblem(id){
+  const p = problems.find(x => x.id === id);
+  const fb = document.getElementById('feedback-' + id);
+  const card = document.getElementById('card-' + id);
+  if(card.classList.contains('locked')) return;
+
+  let correct = false, dOk = true, rOk = true;
+
+  if(p.type === 'single'){
+    const val = document.getElementById('input-' + id).value;
+    correct = matches(val, p.accepted);
+  } else {
+    const dVal = document.getElementById('input-' + id + '-domain').value;
+    const rVal = document.getElementById('input-' + id + '-range').value;
+    dOk = matches(dVal, p.domainAccepted);
+    rOk = matches(rVal, p.rangeAccepted);
+    correct = dOk && rOk;
+  }
+
+  if(correct){
+    results[id] = true;
+    attemptsUsed[id] = (attempts[id] || 0) + 1;
+    fb.className = 'feedback show correct';
+    fb.innerHTML = `<div class="verdict">✓ Correct!</div><div class="explain">${p.explain}</div>`;
+    lockProblem(id, true);
+    if(!solved.has(id)){ solved.add(id); updateScore(); }
+    return;
+  }
+
+  attempts[id] = (attempts[id] || 0) + 1;
+  const used = attempts[id];
+
+  // Try to diagnose the specific mistake from what they actually typed.
+  let diagnosis = null;
+  if(p.type === 'single'){
+    const val = document.getElementById('input-' + id).value;
+    diagnosis = findDistractorMessage(val, p.distractors);
+  } else {
+    const dVal = document.getElementById('input-' + id + '-domain').value;
+    const rVal = document.getElementById('input-' + id + '-range').value;
+    const dMsg = dOk ? null : findDistractorMessage(dVal, p.domainDistractors);
+    const rMsg = rOk ? null : findDistractorMessage(rVal, p.rangeDistractors);
+    const msgs = [dMsg, rMsg].filter(Boolean);
+    if(msgs.length) diagnosis = msgs.join(' ');
+  }
+
+  if(used < MAX_ATTEMPTS){
+    let partial = '';
+    if(p.type === 'dual'){
+      const bits = [];
+      if(!dOk) bits.push('Domain needs another look.');
+      if(!rOk) bits.push('Range needs another look.');
+      partial = bits.join(' ');
+    }
+    if(diagnosis){
+      fb.className = 'feedback show hint';
+      fb.innerHTML = `<div class="verdict">Not quite — attempt ${used} of ${MAX_ATTEMPTS}</div><div class="explain">🔎 ${diagnosis}</div>`;
+    } else {
+      const hintText = used === 1 ? p.hint1 : p.hint2;
+      fb.className = 'feedback show hint';
+      fb.innerHTML = `<div class="verdict">Not quite — attempt ${used} of ${MAX_ATTEMPTS}</div><div class="explain">${partial ? partial + '<br>' : ''}💡 ${hintText}</div>`;
+    }
+  } else {
+    results[id] = false;
+    attemptsUsed[id] = used;
+    fb.className = 'feedback show revealed';
+    fb.innerHTML = `<div class="verdict">Out of attempts — here's how to solve it</div><div class="explain">${p.explain}</div>`;
+    lockProblem(id, false);
+  }
+}
+
+function renderPart(part){
+  const container = document.getElementById('container');
+  container.innerHTML = '';
+  const partProblems = problems.filter(p => p.part === part);
+  partProblems.forEach((p, i) => container.appendChild(renderProblem(p, i)));
+}
+
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     tab.classList.add('active');
-    document.getElementById('stage-' + tab.dataset.stage).classList.add('active');
+    renderPart(tab.dataset.part);
   });
 });
 
-function feeOf(d){ return 2 + 1.5*d; }
-
-function runFee(){
-  const raw = document.getElementById('fee-distance').value;
-  const limits = isOn('fee-toggle');
-  if(raw === ''){ renderBox('fee-output','warn','Missing Input','Type a distance first.','The machine has nothing to work with yet.'); return; }
-  const d = parseFloat(raw);
-
-  if(limits && d < 0){
-    renderBox('fee-output','bad','Rejected — Out of Domain',
-      `d = ${d} mi is not allowed`,
-      `Distance can't be negative — so the domain is restricted to <b>d ≥ 0</b>.`);
-    return;
-  }
-
-  const f = feeOf(d);
-  if(!limits && d < 0){
-    renderBox('fee-output','bad','🚨 Bug Reproduced',
-      `Charge: $${f.toFixed(2)}`,
-      `The math alone never rejects a negative distance — it just calculates. With the switch ON, this input gets rejected instead.`);
-    return;
-  }
-
-  renderBox('fee-output','ok','Valid Output',
-    `Charge: $${f.toFixed(2)}`,
-    `d = ${d} mi is in the domain, so the machine produced a sensible fee — this is a value in the <b>range</b>.`);
-}
-
-function discountOf(f){ return f > 20 ? f*0.9 : f; }
-
-function runComposite(){
-  const raw = document.getElementById('comp-distance').value;
-  const reversed = isOn('comp-toggle');
-  if(raw === ''){ renderBox('comp-output','warn','Missing Input','Type a distance first.','Nothing to feed the machines yet.'); return; }
-  const d = parseFloat(raw);
-
-  if(d < 0){
-    renderBox('comp-output','bad','Rejected — Out of Domain', `d = ${d} mi`, `Distance can't be negative — this never even reaches the fee machine.`);
-    return;
-  }
-
-  if(reversed){
-    const bogus = discountOf(d);
-    renderBox('comp-output','warn','Weld Doesn\'t Fit',
-      `"Discounted distance": ${bogus.toFixed(2)}`,
-      `The discount machine expects a <b>dollar charge</b>, not a raw distance. The number computes, but it means nothing — "10% off 15 miles" isn't a real quantity. Order matters when you chain machines.`);
-    return;
-  }
-
-  const f = feeOf(d);
-  const final = discountOf(f);
-  const discounted = f > 20;
-  renderBox('comp-output','ok','Valid Composite',
-    `Final charge: $${final.toFixed(2)}`,
-    `fee(${d}) = $${f.toFixed(2)} → discount(${f.toFixed(2)}) = $${final.toFixed(2)}. ${discounted ? 'Loyalty discount applied.' : 'No discount — fee was $20 or under.'}`);
-}
-
-// ---- Stage 3: domain of a composite, insurance(fee(d)) = sqrt(fee(d) - 5) ----
-function runDomainComp(){
-  const raw = document.getElementById('dc-distance').value;
-  if(raw === ''){ renderBox('dc-output','warn','Missing Input','Type a distance first.','Nothing to feed the machines yet.'); return; }
-  const d = parseFloat(raw);
-
-  if(d < 0){
-    renderBox('dc-output','bad','Rejected — Out of Domain', `d = ${d} mi`, `Distance can't be negative. This fails machine 1's own domain before we even reach the insurance step.`);
-    return;
-  }
-
-  const f = feeOf(d);
-  if(f - 5 < 0){
-    renderBox('dc-output','bad','Rejected — Fails Machine 2\'s Domain',
-      `fee(${d}) = $${f.toFixed(2)}, which is under $5`,
-      `d = ${d} mi is perfectly valid for <b>fee</b> alone (d ≥ 0 ✓) — but the output $${f.toFixed(2)} doesn't fit into the insurance machine, which needs f ≥ 5. Solving 2 + 1.5d ≥ 5 gives <b>d ≥ 2</b>. This distance is in fee's domain but NOT in the composite's domain.`);
-    return;
-  }
-
-  const surcharge = Math.sqrt(f - 5);
-  renderBox('dc-output','ok','Valid Composite',
-    `Surcharge: $${surcharge.toFixed(2)}`,
-    `fee(${d}) = $${f.toFixed(2)} ≥ 5, so it fits into the insurance machine. insurance(fee(${d})) = √(${f.toFixed(2)} − 5) = $${surcharge.toFixed(2)}. This confirms d ≥ 2 is the composite's real domain.`);
-}
-
-function runReverseComp(){
-  const raw = document.getElementById('rc-surcharge').value;
-  const wrongOrder = isOn('rc-toggle');
-  if(raw === ''){ renderBox('rc-output','warn','Missing Input','Type a surcharge amount first.','Nothing to reverse yet.'); return; }
-  const s = parseFloat(raw);
-
-  if(s < 0){
-    renderBox('rc-output','bad','Impossible Surcharge',
-      `$${s.toFixed(2)} was never charged`,
-      `A square root never produces a negative output, so no distance could have produced a negative surcharge.`);
-    return;
-  }
-
-  if(wrongOrder){
-    const undoFeeFirst = (s - 2) / 1.5;
-    const dWrong = undoFeeFirst * undoFeeFirst;
-    const checkFee = feeOf(dWrong);
-    const checkSurcharge = checkFee - 5 >= 0 ? Math.sqrt(checkFee - 5) : NaN;
-    renderBox('rc-output','warn','Wrong Order — Doesn\'t Check Out',
-      `"distance": ${dWrong.toFixed(2)} mi`,
-      `This undid <b>fee</b> first, but fee wasn't the last thing that happened — the square root was. Plug ${dWrong.toFixed(2)} back through the real composite: insurance(fee(${dWrong.toFixed(2)})) = ${isNaN(checkSurcharge) ? 'undefined' : '$' + checkSurcharge.toFixed(2)}, not $${s.toFixed(2)}. The order has to flip when you reverse a chain.`);
-    return;
-  }
-
-  const feeValue = s*s + 5;
-  const d = (feeValue - 2) / 1.5;
-  renderBox('rc-output','ok','Distance Recovered',
-    `${d.toFixed(2)} miles`,
-    `Undo the square root first: $${s.toFixed(2)}² + 5 = fee = $${feeValue.toFixed(2)}. Then undo fee: (${feeValue.toFixed(2)} − 2) ÷ 1.5 = <b>${d.toFixed(2)} mi</b>. Square root undone first, fee formula undone second — reverse of the original order.`);
-}
-
-function runInverse(){
-  const raw = document.getElementById('inv-charge').value;
-  const capped = isOn('inv-toggle');
-  if(raw === ''){ renderBox('inv-output','warn','Missing Input','Type a reported charge first.','Support needs a number to look up.'); return; }
-  const c = parseFloat(raw);
-
-  if(c < 2){
-    renderBox('inv-output','bad','Impossible Charge',
-      `$${c.toFixed(2)} was never charged`,
-      `The base fee alone is $2 — no distance produces a charge under that. Outside the <b>range</b> of fee(d).`);
-    return;
-  }
-
-  if(capped){
-    if(c > 50){
-      renderBox('inv-output','bad','Impossible Charge',
-        `$${c.toFixed(2)} exceeds the cap`,
-        `Charges are capped at $50 — nothing above that was ever billed.`);
-      return;
-    }
-    if(Math.abs(c - 50) < 1e-9){
-      renderBox('inv-output','warn','No Unique Answer',
-        `Any distance ≥ 32 mi could match`,
-        `Every distance past the cap produces exactly $50 — many inputs, one output. <b>fee⁻¹(50)</b> doesn't exist as a single value.`);
-      return;
-    }
-  }
-
-  const d = (c - 2) / 1.5;
-  renderBox('inv-output','ok','Distance Recovered',
-    `${d.toFixed(2)} miles`,
-    `fee⁻¹(${c.toFixed(2)}) = (${c.toFixed(2)} − 2) ÷ 1.5 = ${d.toFixed(2)}. One charge, one distance.`);
-}
+renderPart('A');
+updateScore();
 </script>
 </body>
 </html>

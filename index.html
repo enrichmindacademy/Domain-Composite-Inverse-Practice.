@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AppLab — FastBite Delivery Fee Engine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FFFFFF;
+    --panel:#F5F3FC;
+    --panel-2:#ECE7FA;
+    --border:#DCD4F5;
+    --purple:#7C3AED;
+    --purple-deep:#5B21B6;
+    --blue:#2563EB;
+    --green:#047857;
+    --green-bg:#E7F6EF;
+    --amber:#B45309;
+    --amber-bg:#FDF2E2;
+    --red:#B91C1C;
+    --red-bg:#FCEAEA;
+    --text:#1D1832;
+    --dim:#5B5478;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(circle at 14% -8%, #EFE9FB 0%, #FFFFFF 40%),
+      radial-gradient(circle at 100% 100%, #E9F0FE 0%, #FFFFFF 45%);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    padding:24px 32px 50px;
+  }
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--blue);
+    font-weight:700;
+    margin:0 0 5px;
+  }
+  h1{
+    font-family:'Sora',sans-serif;
+    font-weight:800;
+    font-size:clamp(22px,3vw,32px);
+    margin:0 0 4px;
+    letter-spacing:-0.01em;
+    color:var(--text);
+  }
+  .sub{
+    color:var(--dim);
+    font-size:14px;
+    max-width:700px;
+    line-height:1.5;
+    margin:0 0 16px;
+  }
+
+  .howto{
+    background:var(--panel);
+    border:1.5px solid var(--border);
+    border-radius:14px;
+    padding:12px 18px;
+    margin-bottom:18px;
+    display:flex;
+    gap:22px;
+    flex-wrap:wrap;
+    align-items:center;
+  }
+  .howto .item{
+    display:flex;
+    gap:8px;
+    align-items:center;
+    font-size:12.5px;
+    color:var(--text);
+    line-height:1.4;
+  }
+  .howto .num{
+    flex-shrink:0;
+    width:20px; height:20px;
+    border-radius:50%;
+    background:var(--purple);
+    color:#fff;
+    font-family:'Sora',sans-serif;
+    font-weight:700;
+    font-size:11px;
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  .tabs{
+    display:flex;
+    gap:8px;
+    margin-bottom:16px;
+    flex-wrap:wrap;
+  }
+  .tab{
+    font-family:'Sora',sans-serif;
+    font-weight:700;
+    font-size:13.5px;
+    padding:10px 16px;
+    border-radius:11px;
+    border:1.5px solid var(--border);
+    background:#fff;
+    color:var(--dim);
+    cursor:pointer;
+    transition:all .15s ease;
+  }
+  .tab .n{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    color:var(--purple);
+    margin-right:7px;
+  }
+  .tab.active{
+    background:linear-gradient(135deg, var(--purple), var(--blue));
+    color:#fff;
+    border-color:transparent;
+  }
+  .tab.active .n{color:#fff; opacity:.9;}
+  .tab:not(.active):hover{border-color:var(--purple); color:var(--text);}
+
+  .stage{display:none;}
+  .stage.active{display:block; animation:fade .25s ease;}
+  @keyframes fade{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);}}
+
+  .grid{
+    display:grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap:18px;
+  }
+  @media (max-width:900px){ .grid{grid-template-columns:1fr;} }
+
+  .card{
+    background:#fff;
+    border:1.5px solid var(--border);
+    border-radius:16px;
+    padding:18px 20px;
+    box-shadow:0 2px 14px rgba(90,60,180,0.05);
+  }
+  .card h2{
+    font-family:'Sora',sans-serif;
+    font-size:17px;
+    margin:0 0 3px;
+    color:var(--text);
+  }
+  .card .hint{
+    color:var(--dim);
+    font-size:13px;
+    margin:0 0 12px;
+    line-height:1.45;
+  }
+
+  .stepline{
+    display:flex;
+    gap:8px;
+    align-items:flex-start;
+    background:var(--panel);
+    border-radius:10px;
+    padding:8px 11px;
+    margin:8px 0;
+    font-size:12px;
+    color:var(--text);
+    line-height:1.4;
+  }
+  .stepline b{color:var(--purple-deep);}
+
+  .machine-row{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    flex-wrap:wrap;
+    margin:12px 0 14px;
+  }
+  .machine{
+    background:var(--panel);
+    border:1.5px solid var(--border);
+    border-radius:12px;
+    padding:9px 12px;
+    font-family:'Sora',sans-serif;
+    font-weight:700;
+    font-size:12px;
+    text-align:center;
+    min-width:88px;
+    color:var(--text);
+  }
+  .machine .lbl{display:block; font-size:10px; color:var(--dim); font-weight:500; margin-top:2px;}
+  .arrow{color:var(--purple); font-size:16px; font-weight:700;}
+
+  label{
+    display:block;
+    font-size:11.5px;
+    font-weight:700;
+    color:var(--dim);
+    margin:12px 0 5px;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+  }
+  input[type=number]{
+    width:100%;
+    background:#fff;
+    border:1.5px solid var(--border);
+    color:var(--text);
+    font-family:'JetBrains Mono',monospace;
+    font-size:15px;
+    padding:10px 13px;
+    border-radius:10px;
+  }
+  input[type=number]:focus{outline:2px solid var(--purple); border-color:var(--purple);}
+
+  .toggle-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    background:var(--panel);
+    border:1.5px solid var(--border);
+    border-radius:12px;
+    padding:10px 14px;
+    margin:12px 0;
+  }
+  .toggle-row .t-label{font-size:12.5px; font-weight:700; color:var(--text);}
+  .toggle-row .t-sub{font-size:11px; color:var(--dim); margin-top:2px;}
+  .switch{
+    position:relative;
+    width:44px;
+    height:25px;
+    background:#CFC5EE;
+    border-radius:20px;
+    cursor:pointer;
+    flex-shrink:0;
+    transition:background .15s;
+  }
+  .switch.on{background:linear-gradient(135deg, var(--purple), var(--blue));}
+  .switch .dot{
+    position:absolute;
+    top:3px; left:3px;
+    width:19px; height:19px;
+    background:#fff;
+    border-radius:50%;
+    box-shadow:0 1px 3px rgba(0,0,0,0.25);
+    transition:transform .15s;
+  }
+  .switch.on .dot{transform:translateX(19px);}
+
+  button.run{
+    width:100%;
+    margin-top:14px;
+    background:linear-gradient(135deg, var(--purple), var(--blue));
+    color:#fff;
+    border:none;
+    font-family:'Sora',sans-serif;
+    font-weight:700;
+    font-size:14.5px;
+    padding:12px;
+    border-radius:11px;
+    cursor:pointer;
+    transition:transform .1s ease;
+  }
+  button.run:active{transform:scale(0.98);}
+
+  .output{
+    min-height:170px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+  }
+  .result-box{
+    border-radius:14px;
+    padding:16px 18px;
+    border:1.5px solid;
+  }
+  .result-box.ok{background:var(--green-bg); border-color:var(--green);}
+  .result-box.bad{background:var(--red-bg); border-color:var(--red);}
+  .result-box.warn{background:var(--amber-bg); border-color:var(--amber);}
+  .result-box .status{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11.5px;
+    font-weight:700;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    margin-bottom:6px;
+  }
+  .result-box.ok .status{color:var(--green);}
+  .result-box.bad .status{color:var(--red);}
+  .result-box.warn .status{color:var(--amber);}
+  .result-box .headline{
+    font-family:'Sora',sans-serif;
+    font-weight:800;
+    font-size:23px;
+    margin-bottom:6px;
+    color:var(--text);
+  }
+  .result-box .detail{
+    font-size:13px;
+    color:#3D3860;
+    line-height:1.55;
+  }
+  .result-box .detail b{color:var(--text);}
+  .placeholder{
+    color:var(--dim);
+    font-size:13.5px;
+    text-align:center;
+    padding:34px 10px;
+    border:1.5px dashed var(--border);
+    border-radius:14px;
+    background:var(--panel);
+  }
+
+  /* ---- Blank workspace for live annotation ---- */
+  .workspace{
+    margin-top:16px;
+    border:1.5px dashed #C9BEEE;
+    border-radius:14px;
+    min-height:190px;
+    position:relative;
+    background:
+      repeating-linear-gradient(
+        to bottom,
+        transparent,
+        transparent 34px,
+        #EDE8FA 34px,
+        #EDE8FA 35px
+      );
+  }
+  .workspace .ws-label{
+    position:absolute;
+    top:8px;
+    left:14px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:10.5px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    color:#A79BD6;
+  }
+
+  .footnote{
+    margin-top:12px;
+    font-size:12px;
+    color:var(--dim);
+    background:var(--panel);
+    border-radius:10px;
+    padding:10px 13px;
+    border:1.5px solid var(--border);
+  }
+  .footnote b{color:var(--text);}
+</style>
+</head>
+<body>
+
+  <p class="eyebrow">AppLab · Live &amp; Breakable</p>
+  <h1>FastBite Delivery — Fee Engine</h1>
+  <p class="sub">A real (small) piece of software, working live. Type numbers in, press the button, and watch what the app actually does.</p>
+
+  <div class="howto">
+    <div class="item"><span class="num">1</span><span>Go through the tabs <b>in order</b>.</span></div>
+    <div class="item"><span class="num">2</span><span><b>Green</b> = works. <b>Red</b> = broken. <b>Yellow</b> = ambiguous.</span></div>
+    <div class="item"><span class="num">3</span><span>Flip each switch <b>before and after</b> running a number.</span></div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-stage="fee"><span class="n">01</span>Fee Calculator</div>
+    <div class="tab" data-stage="composite"><span class="n">02</span>Loyalty Discount</div>
+    <div class="tab" data-stage="domaincomp"><span class="n">03</span>Domain of a Composite</div>
+    <div class="tab" data-stage="inverse"><span class="n">04</span>Support Lookup</div>
+    <div class="tab" data-stage="reversecomp"><span class="n">05</span>Reverse the Surcharge</div>
+  </div>
+
+  <!-- STAGE 1: FEE CALCULATOR (DOMAIN / RANGE) -->
+  <div class="stage active" id="stage-fee">
+    <div class="grid">
+      <div class="card">
+        <h2>fee(d) = 2 + 1.5d</h2>
+        <p class="hint">Flat $2 base fee, plus $1.50 per mile.</p>
+
+        <div class="machine-row">
+          <div class="machine">distance (mi)<span class="lbl">input</span></div>
+          <div class="arrow">→</div>
+          <div class="machine">fee(d)<span class="lbl">machine</span></div>
+          <div class="arrow">→</div>
+          <div class="machine">charge ($)<span class="lbl">output</span></div>
+        </div>
+
+        <div class="stepline"><b>Try this first:</b> switch OFF, enter <b>−3</b> as the distance.</div>
+
+        <label>Distance (miles)</label>
+        <input type="number" id="fee-distance" placeholder="e.g. 4  or  try -3" step="any">
+
+        <div class="toggle-row">
+          <div>
+            <div class="t-label">Enforce real-world limits</div>
+            <div class="t-sub">On = rejects inputs that can't really happen.</div>
+          </div>
+          <div class="switch" id="fee-toggle" onclick="toggleSwitch('fee-toggle')"><div class="dot"></div></div>
+        </div>
+
+        <button class="run" onclick="runFee()">Calculate Fee</button>
+      </div>
+
+      <div class="card output" id="fee-output">
+        <div class="placeholder">Enter a distance and press Calculate Fee.</div>
+      </div>
+    </div>
+    <div class="workspace"></div>
+  </div>
+
+  <!-- STAGE 2: COMPOSITE (ORDER) -->
+  <div class="stage" id="stage-composite">
+    <div class="grid">
+      <div class="card">
+        <h2>discount(fee(d))</h2>
+        <p class="hint">Loyalty rule: 10% off any charge over $20. It expects a <em>dollar amount</em>, not a distance.</p>
+
+        <div class="machine-row">
+          <div class="machine">distance (mi)<span class="lbl">input</span></div>
+          <div class="arrow">→</div>
+          <div class="machine">fee(d)<span class="lbl">machine 1</span></div>
+          <div class="arrow">→</div>
+          <div class="machine">discount(f)<span class="lbl">machine 2</span></div>
+          <div class="arrow">→</div>
+          <div class="machine">final<span class="lbl">output</span></div>
+        </div>
+
+        <div class="stepline"><b>Try this first:</b> enter <b>15</b>, switch OFF. Then flip the switch ON and run 15 again.</div>
+
+        <label>Distance (miles)</label>
+        <input type="number" id="comp-distance" placeholder="e.g. 15" step="any">
+
+        <div class="toggle-row">
+          <div>
+            <div class="t-label">Reverse the order</div>
+            <div class="t-sub">On = discount applied straight to the distance.</div>
+          </div>
+          <div class="switch" id="comp-toggle" onclick="toggleSwitch('comp-toggle')"><div class="dot"></div></div>
+        </div>
+
+        <button class="run" onclick="runComposite()">Run Composite</button>
+      </div>
+
+      <div class="card output" id="comp-output">
+        <div class="placeholder">Enter a distance and press Run Composite.</div>
+      </div>
+    </div>
+    <div class="workspace"></div>
+  </div>
+
+  <!-- STAGE 3: DOMAIN OF A COMPOSITE (INSURANCE SURCHARGE) -->
+  <div class="stage" id="stage-domaincomp">
+    <div class="grid">
+      <div class="card">
+        <h2>insurance(fee(d)) = √(fee(d) − 5)</h2>
+        <p class="hint">New rule: a surge-insurance surcharge, computed as the square root of (fee − 5). A square root can't accept a negative number — so this machine has its own domain restriction.</p>
+
+        <div class="machine-row">
+          <div class="machine">distance (mi)<span class="lbl">input</span></div>
+          <div class="arrow">→</div>
+          <div class="machine">fee(d)<span class="lbl">machine 1</span></div>
+          <div class="arrow">→</div>
+          <div class="machine">√(f − 5)<span class="lbl">machine 2</span></div>
+          <div class="arrow">→</div>
+          <div class="machine">surcharge<span class="lbl">output</span></div>
+        </div>
+
+        <div class="stepline"><b>Try this first:</b> enter <b>1</b> mile (fee alone is totally valid here). Then try <b>2</b>, then <b>3</b>. Watch where it starts working.</div>
+
+        <label>Distance (miles)</label>
+        <input type="number" id="dc-distance" placeholder="e.g. 1, 2, or 3" step="any">
+
+        <button class="run" onclick="runDomainComp()">Run Composite</button>
+      </div>
+
+      <div class="card output" id="dc-output">
+        <div class="placeholder">Enter a distance and press Run Composite.</div>
+      </div>
+    </div>
+    <div class="workspace"></div>
+  </div>
+
+  <!-- STAGE 4: INVERSE -->
+  <div class="stage" id="stage-inverse">
+    <div class="grid">
+      <div class="card">
+        <h2>Support Lookup: fee⁻¹(charge)</h2>
+        <p class="hint">A customer reports a charge. Support has to work backward to find the distance.</p>
+
+        <div class="machine-row">
+          <div class="machine">charge ($)<span class="lbl">input</span></div>
+          <div class="arrow">→</div>
+          <div class="machine">fee⁻¹(x)<span class="lbl">reverse</span></div>
+          <div class="arrow">→</div>
+          <div class="machine">distance (mi)<span class="lbl">output</span></div>
+        </div>
+
+        <div class="stepline"><b>Try this first:</b> switch OFF, enter <b>12.50</b>. Then switch ON and try <b>50</b>.</div>
+
+        <label>Reported charge ($)</label>
+        <input type="number" id="inv-charge" placeholder="e.g. 12.50  or  try 50" step="any">
+
+        <div class="toggle-row">
+          <div>
+            <div class="t-label">Use surge-capped fee</div>
+            <div class="t-sub">On = charge can never exceed $50.</div>
+          </div>
+          <div class="switch" id="inv-toggle" onclick="toggleSwitch('inv-toggle')"><div class="dot"></div></div>
+        </div>
+
+        <button class="run" onclick="runInverse()">Look Up Distance</button>
+      </div>
+
+      <div class="card output" id="inv-output">
+        <div class="placeholder">Enter a charge amount and press Look Up Distance.</div>
+      </div>
+    </div>
+    <div class="workspace"></div>
+  </div>
+
+  <!-- STAGE 5: REVERSE THE SURCHARGE (INVERSE OF A COMPOSITE) -->
+  <div class="stage" id="stage-reversecomp">
+    <div class="grid">
+      <div class="card">
+        <h2>Reverse: surcharge → distance</h2>
+        <p class="hint">A customer reports their <em>insurance surcharge</em> — not the fee, the surcharge. To get back to distance, you have to undo the machines in the <b>opposite order</b> from how they ran: undo the square root first, then undo the fee formula.</p>
+
+        <div class="machine-row">
+          <div class="machine">surcharge<span class="lbl">input</span></div>
+          <div class="arrow">→</div>
+          <div class="machine">square it<span class="lbl">undo √ first</span></div>
+          <div class="arrow">→</div>
+          <div class="machine">undo fee(d)<span class="lbl">undo last</span></div>
+          <div class="arrow">→</div>
+          <div class="machine">distance<span class="lbl">output</span></div>
+        </div>
+
+        <div class="stepline"><b>Try this first:</b> switch OFF, enter <b>1</b> as the surcharge. Then flip the switch ON and run 1 again to see the wrong-order mistake.</div>
+
+        <label>Reported surcharge ($)</label>
+        <input type="number" id="rc-surcharge" placeholder="e.g. 1" step="any">
+
+        <div class="toggle-row">
+          <div>
+            <div class="t-label">Undo in the original order (wrong)</div>
+            <div class="t-sub">On = undoes fee first, square root second — the mistake students make.</div>
+          </div>
+          <div class="switch" id="rc-toggle" onclick="toggleSwitch('rc-toggle')"><div class="dot"></div></div>
+        </div>
+
+        <button class="run" onclick="runReverseComp()">Reverse to Distance</button>
+      </div>
+
+      <div class="card output" id="rc-output">
+        <div class="placeholder">Enter a surcharge amount and press Reverse to Distance.</div>
+      </div>
+    </div>
+    <div class="workspace"></div>
+  </div>
+
+<script>
+function toggleSwitch(id){
+  document.getElementById(id).classList.toggle('on');
+}
+function isOn(id){ return document.getElementById(id).classList.contains('on'); }
+
+function renderBox(containerId, cls, status, headline, detail){
+  document.getElementById(containerId).innerHTML =
+    `<div class="result-box ${cls}">
+       <div class="status">${status}</div>
+       <div class="headline">${headline}</div>
+       <div class="detail">${detail}</div>
+     </div>`;
+}
+
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.stage').forEach(s=>s.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('stage-' + tab.dataset.stage).classList.add('active');
+  });
+});
+
+function feeOf(d){ return 2 + 1.5*d; }
+
+function runFee(){
+  const raw = document.getElementById('fee-distance').value;
+  const limits = isOn('fee-toggle');
+  if(raw === ''){ renderBox('fee-output','warn','Missing Input','Type a distance first.','The machine has nothing to work with yet.'); return; }
+  const d = parseFloat(raw);
+
+  if(limits && d < 0){
+    renderBox('fee-output','bad','Rejected — Out of Domain',
+      `d = ${d} mi is not allowed`,
+      `Distance can't be negative — so the domain is restricted to <b>d ≥ 0</b>.`);
+    return;
+  }
+
+  const f = feeOf(d);
+  if(!limits && d < 0){
+    renderBox('fee-output','bad','🚨 Bug Reproduced',
+      `Charge: $${f.toFixed(2)}`,
+      `The math alone never rejects a negative distance — it just calculates. With the switch ON, this input gets rejected instead.`);
+    return;
+  }
+
+  renderBox('fee-output','ok','Valid Output',
+    `Charge: $${f.toFixed(2)}`,
+    `d = ${d} mi is in the domain, so the machine produced a sensible fee — this is a value in the <b>range</b>.`);
+}
+
+function discountOf(f){ return f > 20 ? f*0.9 : f; }
+
+function runComposite(){
+  const raw = document.getElementById('comp-distance').value;
+  const reversed = isOn('comp-toggle');
+  if(raw === ''){ renderBox('comp-output','warn','Missing Input','Type a distance first.','Nothing to feed the machines yet.'); return; }
+  const d = parseFloat(raw);
+
+  if(d < 0){
+    renderBox('comp-output','bad','Rejected — Out of Domain', `d = ${d} mi`, `Distance can't be negative — this never even reaches the fee machine.`);
+    return;
+  }
+
+  if(reversed){
+    const bogus = discountOf(d);
+    renderBox('comp-output','warn','Weld Doesn\'t Fit',
+      `"Discounted distance": ${bogus.toFixed(2)}`,
+      `The discount machine expects a <b>dollar charge</b>, not a raw distance. The number computes, but it means nothing — "10% off 15 miles" isn't a real quantity. Order matters when you chain machines.`);
+    return;
+  }
+
+  const f = feeOf(d);
+  const final = discountOf(f);
+  const discounted = f > 20;
+  renderBox('comp-output','ok','Valid Composite',
+    `Final charge: $${final.toFixed(2)}`,
+    `fee(${d}) = $${f.toFixed(2)} → discount(${f.toFixed(2)}) = $${final.toFixed(2)}. ${discounted ? 'Loyalty discount applied.' : 'No discount — fee was $20 or under.'}`);
+}
+
+// ---- Stage 3: domain of a composite, insurance(fee(d)) = sqrt(fee(d) - 5) ----
+function runDomainComp(){
+  const raw = document.getElementById('dc-distance').value;
+  if(raw === ''){ renderBox('dc-output','warn','Missing Input','Type a distance first.','Nothing to feed the machines yet.'); return; }
+  const d = parseFloat(raw);
+
+  if(d < 0){
+    renderBox('dc-output','bad','Rejected — Out of Domain', `d = ${d} mi`, `Distance can't be negative. This fails machine 1's own domain before we even reach the insurance step.`);
+    return;
+  }
+
+  const f = feeOf(d);
+  if(f - 5 < 0){
+    renderBox('dc-output','bad','Rejected — Fails Machine 2\'s Domain',
+      `fee(${d}) = $${f.toFixed(2)}, which is under $5`,
+      `d = ${d} mi is perfectly valid for <b>fee</b> alone (d ≥ 0 ✓) — but the output $${f.toFixed(2)} doesn't fit into the insurance machine, which needs f ≥ 5. Solving 2 + 1.5d ≥ 5 gives <b>d ≥ 2</b>. This distance is in fee's domain but NOT in the composite's domain.`);
+    return;
+  }
+
+  const surcharge = Math.sqrt(f - 5);
+  renderBox('dc-output','ok','Valid Composite',
+    `Surcharge: $${surcharge.toFixed(2)}`,
+    `fee(${d}) = $${f.toFixed(2)} ≥ 5, so it fits into the insurance machine. insurance(fee(${d})) = √(${f.toFixed(2)} − 5) = $${surcharge.toFixed(2)}. This confirms d ≥ 2 is the composite's real domain.`);
+}
+
+function runReverseComp(){
+  const raw = document.getElementById('rc-surcharge').value;
+  const wrongOrder = isOn('rc-toggle');
+  if(raw === ''){ renderBox('rc-output','warn','Missing Input','Type a surcharge amount first.','Nothing to reverse yet.'); return; }
+  const s = parseFloat(raw);
+
+  if(s < 0){
+    renderBox('rc-output','bad','Impossible Surcharge',
+      `$${s.toFixed(2)} was never charged`,
+      `A square root never produces a negative output, so no distance could have produced a negative surcharge.`);
+    return;
+  }
+
+  if(wrongOrder){
+    const undoFeeFirst = (s - 2) / 1.5;
+    const dWrong = undoFeeFirst * undoFeeFirst;
+    const checkFee = feeOf(dWrong);
+    const checkSurcharge = checkFee - 5 >= 0 ? Math.sqrt(checkFee - 5) : NaN;
+    renderBox('rc-output','warn','Wrong Order — Doesn\'t Check Out',
+      `"distance": ${dWrong.toFixed(2)} mi`,
+      `This undid <b>fee</b> first, but fee wasn't the last thing that happened — the square root was. Plug ${dWrong.toFixed(2)} back through the real composite: insurance(fee(${dWrong.toFixed(2)})) = ${isNaN(checkSurcharge) ? 'undefined' : '$' + checkSurcharge.toFixed(2)}, not $${s.toFixed(2)}. The order has to flip when you reverse a chain.`);
+    return;
+  }
+
+  const feeValue = s*s + 5;
+  const d = (feeValue - 2) / 1.5;
+  renderBox('rc-output','ok','Distance Recovered',
+    `${d.toFixed(2)} miles`,
+    `Undo the square root first: $${s.toFixed(2)}² + 5 = fee = $${feeValue.toFixed(2)}. Then undo fee: (${feeValue.toFixed(2)} − 2) ÷ 1.5 = <b>${d.toFixed(2)} mi</b>. Square root undone first, fee formula undone second — reverse of the original order.`);
+}
+
+function runInverse(){
+  const raw = document.getElementById('inv-charge').value;
+  const capped = isOn('inv-toggle');
+  if(raw === ''){ renderBox('inv-output','warn','Missing Input','Type a reported charge first.','Support needs a number to look up.'); return; }
+  const c = parseFloat(raw);
+
+  if(c < 2){
+    renderBox('inv-output','bad','Impossible Charge',
+      `$${c.toFixed(2)} was never charged`,
+      `The base fee alone is $2 — no distance produces a charge under that. Outside the <b>range</b> of fee(d).`);
+    return;
+  }
+
+  if(capped){
+    if(c > 50){
+      renderBox('inv-output','bad','Impossible Charge',
+        `$${c.toFixed(2)} exceeds the cap`,
+        `Charges are capped at $50 — nothing above that was ever billed.`);
+      return;
+    }
+    if(Math.abs(c - 50) < 1e-9){
+      renderBox('inv-output','warn','No Unique Answer',
+        `Any distance ≥ 32 mi could match`,
+        `Every distance past the cap produces exactly $50 — many inputs, one output. <b>fee⁻¹(50)</b> doesn't exist as a single value.`);
+      return;
+    }
+  }
+
+  const d = (c - 2) / 1.5;
+  renderBox('inv-output','ok','Distance Recovered',
+    `${d.toFixed(2)} miles`,
+    `fee⁻¹(${c.toFixed(2)}) = (${c.toFixed(2)} − 2) ÷ 1.5 = ${d.toFixed(2)}. One charge, one distance.`);
+}
+</script>
+</body>
+</html>

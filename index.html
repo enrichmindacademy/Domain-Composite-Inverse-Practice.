@@ -120,9 +120,38 @@
   .submit-status{ font-size:13px; color:var(--dim); }
   .submit-status.ok{ color:var(--green); font-weight:700; }
   .submit-status.err{ color:var(--red); font-weight:700; }
+
+  /* ---- Access gate ---- */
+  #access-gate{
+    max-width:440px; margin:80px auto; background:#fff; border:1.5px solid var(--border);
+    border-radius:18px; padding:32px 30px; box-shadow:0 8px 30px rgba(90,60,180,0.1); text-align:center;
+  }
+  #access-gate h2{ font-family:'Sora',sans-serif; font-size:20px; margin:0 0 8px; color:var(--text); }
+  #access-gate p{ font-size:13.5px; color:var(--dim); margin:0 0 20px; line-height:1.5; }
+  #access-gate input{
+    width:100%; background:#fff; border:1.5px solid var(--border); color:var(--text);
+    font-family:'Inter',sans-serif; font-size:14px; padding:11px 14px; border-radius:10px; margin-bottom:12px;
+  }
+  #access-gate input:focus{ outline:2px solid var(--purple); border-color:var(--purple); }
+  #access-gate button{
+    width:100%; background:linear-gradient(135deg, var(--purple), var(--blue)); color:#fff; border:none;
+    font-family:'Sora',sans-serif; font-weight:700; font-size:14.5px; padding:12px; border-radius:11px; cursor:pointer;
+  }
+  #gate-error{ display:none; color:var(--red); font-size:12.5px; margin-top:10px; font-weight:600; }
+  #main-content{ display:none; }
 </style>
 </head>
 <body>
+
+  <div id="access-gate">
+    <h2>Domain Practice — Restricted Access</h2>
+    <p id="gate-message">Enter your Google Classroom email to unlock this practice set.</p>
+    <input type="email" id="gate-email" placeholder="your email address" autocomplete="off" disabled>
+    <button id="gate-btn" onclick="checkGateAccess()" disabled>Loading class list…</button>
+    <div id="gate-error">That email isn't on the class list — check with your teacher.</div>
+  </div>
+
+  <div id="main-content">
 
   <p class="eyebrow">Self-Check Practice</p>
   <h1>Domain: Restrictions, Composites, and Inverses</h1>
@@ -157,7 +186,65 @@
 
   <div id="container"></div>
 
+  </div>
+
 <script>
+// ---------------- Shared backend URL (Google Apps Script) ----------------
+const SUBMIT_URL = 'https://script.google.com/macros/s/AKfycbxtZIjwuVHIPWFN_yLt35QEskfAhHzQoXzmyrZjkNsWniJXt1GFYgisNW_Hxpfs03zJoQ/exec';
+
+// ---------------- Access gate (roster fetched live from the Sheet) ----------------
+let ALLOWED_EMAILS = [];
+let ROSTER_LOADED = false;
+
+function loadRoster(){
+  const gateMsg = document.getElementById('gate-message');
+  const btn = document.getElementById('gate-btn');
+  const input = document.getElementById('gate-email');
+
+  fetch(SUBMIT_URL)
+    .then(res => res.json())
+    .then(data => {
+      if(data.status === 'success' && Array.isArray(data.emails)){
+        ALLOWED_EMAILS = data.emails.map(e => e.trim().toLowerCase());
+        ROSTER_LOADED = true;
+        gateMsg.textContent = 'Enter your Google Classroom email to unlock this practice set.';
+        btn.textContent = 'Continue';
+        btn.disabled = false;
+        input.disabled = false;
+        input.focus();
+      } else {
+        throw new Error(data.message || 'Unknown error loading class list');
+      }
+    })
+    .catch(err => {
+      gateMsg.textContent = 'Couldn\'t load the class list. Check your internet connection and reload the page, or ask your teacher.';
+      btn.textContent = 'Reload Page';
+      btn.disabled = false;
+      btn.onclick = () => window.location.reload();
+    });
+}
+
+let currentEmail = null;
+
+function checkGateAccess(){
+  if(!ROSTER_LOADED) return;
+  const input = document.getElementById('gate-email');
+  const err = document.getElementById('gate-error');
+  const email = input.value.trim().toLowerCase();
+  if(ALLOWED_EMAILS.includes(email)){
+    currentEmail = email;
+    document.getElementById('access-gate').style.display = 'none';
+    document.getElementById('main-content').style.display = 'block';
+    loadUserProgress(email);
+  } else {
+    err.style.display = 'block';
+  }
+}
+document.getElementById('gate-email').addEventListener('keydown', e => {
+  if(e.key === 'Enter') checkGateAccess();
+});
+loadRoster();
+
 // ---------------- Answer normalization ----------------
 function normalize(s){
   if(!s) return '';
@@ -410,16 +497,45 @@ const problems = [
 ];
 
 // ---------------- Submission config ----------------
-// Paste your Google Apps Script Web App URL below (ends in /exec).
-// Until this is set, students can still use "Copy Results as Text" as a fallback.
-const SUBMIT_URL = 'https://script.google.com/macros/s/AKfycbxtZIjwuVHIPWFN_yLt35QEskfAhHzQoXzmyrZjkNsWniJXt1GFYgisNW_Hxpfs03zJoQ/exec';
 const SUBMIT_CONFIGURED = SUBMIT_URL.indexOf('http') === 0;
+
 
 const solved = new Set();
 const results = {}; // problem id -> true (correct) / false (failed after 3 tries)
 const attempts = {}; // problem id -> number of wrong tries so far
 const attemptsUsed = {}; // problem id -> total tries when finalized (correct or revealed)
 const MAX_ATTEMPTS = 3;
+
+// ---------------- Resume: save/load progress by email ----------------
+function loadUserProgress(email){
+  if(!SUBMIT_CONFIGURED) return;
+  fetch(SUBMIT_URL + '?type=progress&email=' + encodeURIComponent(email))
+    .then(res => res.json())
+    .then(data => {
+      if(data.status === 'success' && data.found && data.state){
+        Object.assign(results, data.state.results || {});
+        Object.assign(attempts, data.state.attempts || {});
+        Object.assign(attemptsUsed, data.state.attemptsUsed || {});
+        Object.keys(results).forEach(id => { if(results[id] === true) solved.add(id); });
+        if(data.state.name){
+          document.getElementById('student-name').value = data.state.name;
+        }
+        updateScore();
+        const activeTab = document.querySelector('.tab.active');
+        if(activeTab) renderPart(activeTab.dataset.part);
+      }
+    })
+    .catch(() => { /* no saved progress, or offline — start fresh, silently */ });
+}
+
+function saveUserProgress(){
+  if(!SUBMIT_CONFIGURED || !currentEmail) return;
+  const name = document.getElementById('student-name').value.trim();
+  fetch(SUBMIT_URL, {
+    method: 'POST',
+    body: JSON.stringify({ type: 'progress', email: currentEmail, state: { results, attempts, attemptsUsed, name } }),
+  }).catch(() => { /* best-effort autosave; final submit is the real safety net */ });
+}
 
 function updateScore(){
   document.getElementById('scorecount').textContent = solved.size + ' / ' + problems.length + ' solved';
@@ -568,6 +684,22 @@ function lockProblem(id, wasCorrect){
   }
 }
 
+function restoreCardState(p){
+  const fb = document.getElementById('feedback-' + p.id);
+  if(results[p.id] === true){
+    fb.className = 'feedback show correct';
+    fb.innerHTML = `<div class="verdict">✓ Correct! (from an earlier session)</div><div class="explain">${p.explain}</div>`;
+    lockProblem(p.id, true);
+  } else if(results[p.id] === false){
+    fb.className = 'feedback show revealed';
+    fb.innerHTML = `<div class="verdict">Answer revealed in an earlier session</div><div class="explain">${p.explain}</div>`;
+    lockProblem(p.id, false);
+  } else if(attempts[p.id] > 0){
+    fb.className = 'feedback show hint';
+    fb.innerHTML = `<div class="verdict">Picking back up — ${attempts[p.id]} of ${MAX_ATTEMPTS} attempts used already</div><div class="explain">Give it another try below.</div>`;
+  }
+}
+
 function findDistractorMessage(userInput, distractorList){
   if(!distractorList) return null;
   const n = normalize(userInput);
@@ -604,6 +736,7 @@ function checkProblem(id){
     fb.innerHTML = `<div class="verdict">✓ Correct!</div><div class="explain">${p.explain}</div>`;
     lockProblem(id, true);
     if(!solved.has(id)){ solved.add(id); updateScore(); }
+    saveUserProgress();
     return;
   }
 
@@ -647,13 +780,17 @@ function checkProblem(id){
     fb.innerHTML = `<div class="verdict">Out of attempts — here's how to solve it</div><div class="explain">${p.explain}</div>`;
     lockProblem(id, false);
   }
+  saveUserProgress();
 }
 
 function renderPart(part){
   const container = document.getElementById('container');
   container.innerHTML = '';
   const partProblems = problems.filter(p => p.part === part);
-  partProblems.forEach((p, i) => container.appendChild(renderProblem(p, i)));
+  partProblems.forEach((p, i) => {
+    container.appendChild(renderProblem(p, i));
+    restoreCardState(p);
+  });
 }
 
 document.querySelectorAll('.tab').forEach(tab => {
